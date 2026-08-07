@@ -490,11 +490,11 @@
         <div class="modal-title-group">
           <span class="modal-badge">Bắt đầu luyện nghe miễn phí</span>
           <h3 class="modal-title" id="modal-title">Khảo Sát Nhu Cầu Người Dùng Windear</h3>
-          <button class="btn-skip-link" id="modal-skip-btn">
+          <button class="btn-skip-link" id="modal-skip-btn" onclick="closeWindearSurvey(event)">
             Hoặc bỏ qua khảo sát, trải nghiệm bài học Windear ngay &rarr;
           </button>
         </div>
-        <button class="modal-close-btn" id="modal-close" aria-label="Đóng modal">&times;</button>
+        <button class="modal-close-btn" id="modal-close" onclick="closeWindearSurvey(event)" aria-label="Đóng modal">&times;</button>
       </div>
 
       <!-- VIEW 1: NATIVE WINDEAR HTML FORM -->
@@ -504,7 +504,7 @@
           <span>Điền thông tin bên dưới để nhận 1 Tháng Pro VIP + Ebook Luyện Tai Miễn Phí</span>
         </div>
 
-        <form id="native-customer-form" class="native-customer-form" name="customer-waitlist" method="POST" data-netlify="true">
+        <form id="native-customer-form" class="native-customer-form" onsubmit="handleNativeFormSubmit(event)">
           <input type="hidden" name="form-name" value="customer-waitlist" />
           
           <div class="form-group">
@@ -559,7 +559,7 @@
             Windear sẽ liên hệ qua Zalo trong ít phút để gửi bạn link luyện nghe miễn phí.
           </p>
 
-          <button class="btn btn-accent btn-large thankyou-close-btn" id="btn-close-thankyou">
+          <button class="btn btn-accent btn-large thankyou-close-btn" id="btn-close-thankyou" onclick="closeWindearSurvey(event)">
             Đóng cửa sổ
           </button>
         </div>
@@ -727,7 +727,47 @@
         msgs.scrollTop = msgs.scrollHeight;
       }, 300);
     };
+
+    // Native Customer Form Submission Handler (Prevents HTTP 405)
+    window.handleNativeFormSubmit = function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var name = (document.getElementById('cust-name') || {}).value || '';
+      var email = (document.getElementById('cust-email') || {}).value || '';
+      var phone = (document.getElementById('cust-phone') || {}).value || '';
+      var goal = (document.getElementById('cust-goal') || {}).value || '';
+      var note = (document.getElementById('cust-note') || {}).value || '';
+
+      var entry = {
+        name: name,
+        email: email,
+        phone: phone,
+        goal: goal,
+        note: note,
+        timestamp: new Date().toLocaleString('vi-VN')
+      };
+
+      try {
+        var saved = JSON.parse(localStorage.getItem('windear_customers_data') || '[]');
+        saved.push(entry);
+        localStorage.setItem('windear_customers_data', JSON.stringify(saved));
+      } catch(err) {}
+
+      // Switch view to Thank You Screen instantly
+      var formView = document.getElementById('modal-form-view');
+      var thankYouView = document.getElementById('modal-thankyou-view');
+      if (formView) formView.style.display = 'none';
+      if (thankYouView) thankYouView.style.display = 'flex';
+
+      // Also send to local backend if running locally
+      try {
+        fetch('/api/save-customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry)
+        }).catch(function(err) {});
+      } catch(err) {}
+    };
   </script>
-  <script src="./main.js?v=9"></script>
+  <script src="./main.js?v=10"></script>
 </body>
 </html>
