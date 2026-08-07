@@ -1,0 +1,6 @@
+# Exclude SQLite local database files from Netlify static hosting
+brain.db
+*.db
+server.py
+__pycache__/
+.DS_Store
