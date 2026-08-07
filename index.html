@@ -622,8 +622,43 @@
         </button>
       </div>
     </div>
-  </div>
-
+  <script>
+    function toggleWindearChatbot(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var chatWin = document.getElementById('chatbot-window');
+      var togBtn = document.getElementById('chatbot-toggle-btn');
+      if (!chatWin) return;
+      
+      var isVisible = chatWin.style.display === 'flex' || chatWin.classList.contains('active');
+      if (isVisible) {
+        chatWin.style.display = 'none';
+        chatWin.classList.remove('active');
+        chatWin.classList.add('hidden');
+        if (togBtn) {
+          var iconOpen = togBtn.querySelector('.chat-icon-open');
+          var iconClose = togBtn.querySelector('.chat-icon-close');
+          if (iconOpen) iconOpen.style.display = 'block';
+          if (iconClose) iconClose.style.display = 'none';
+        }
+      } else {
+        chatWin.style.display = 'flex';
+        chatWin.style.opacity = '1';
+        chatWin.style.visibility = 'visible';
+        chatWin.style.pointerEvents = 'auto';
+        chatWin.classList.remove('hidden');
+        chatWin.classList.add('active');
+        if (togBtn) {
+          var iconOpen = togBtn.querySelector('.chat-icon-open');
+          var iconClose = togBtn.querySelector('.chat-icon-close');
+          if (iconOpen) iconOpen.style.display = 'none';
+          if (iconClose) iconClose.style.display = 'block';
+        }
+        if (window.triggerGreetingIfEmpty) {
+          window.triggerGreetingIfEmpty();
+        }
+      }
+    }
+  </script>
   <script src="./main.js"></script>
 </body>
 </html>
