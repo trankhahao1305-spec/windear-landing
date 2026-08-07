@@ -1223,8 +1223,8 @@ section {
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  z-index: 100000;
-  display: flex;
+  z-index: 2147483646;
+  display: none !important;
   align-items: center;
   justify-content: center;
   opacity: 0;
@@ -1234,8 +1234,9 @@ section {
 }
 
 .modal-overlay.active {
-  opacity: 1;
-  pointer-events: auto;
+  display: flex !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }
 
 .modal-container {

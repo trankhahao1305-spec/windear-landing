@@ -6,6 +6,9 @@
     if (e && e.preventDefault) e.preventDefault();
     var surveyModal = document.getElementById('survey-modal');
     if (surveyModal) {
+      surveyModal.style.setProperty('display', 'flex', 'important');
+      surveyModal.style.setProperty('opacity', '1', 'important');
+      surveyModal.style.setProperty('pointer-events', 'auto', 'important');
       surveyModal.classList.add('active');
       surveyModal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -15,6 +18,9 @@
   window.closeWindearSurvey = function () {
     var surveyModal = document.getElementById('survey-modal');
     if (surveyModal) {
+      surveyModal.style.setProperty('display', 'none', 'important');
+      surveyModal.style.setProperty('opacity', '0', 'important');
+      surveyModal.style.setProperty('pointer-events', 'none', 'important');
       surveyModal.classList.remove('active');
       surveyModal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
