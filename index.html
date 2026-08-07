@@ -607,17 +607,17 @@
 
       <!-- Quick Chips -->
       <div id="chatbot-quick-replies" class="chatbot-quick-replies">
-        <button class="chat-chip" data-query="free">Miễn phí thật không?</button>
-        <button class="chat-chip" data-query="lost">Mất gốc luyện được không?</button>
-        <button class="chat-chip" data-query="diff">Khác gì eJOY, ELSA?</button>
-        <button class="chat-chip" data-query="accents">Có giọng Anh, Úc không?</button>
-        <button class="chat-chip chip-accent" data-query="waitlist">🎁 Đăng ký Form Waitlist</button>
+        <button class="chat-chip" onclick="handleWindearChatInput('Miễn phí thật không?')">Miễn phí thật không?</button>
+        <button class="chat-chip" onclick="handleWindearChatInput('Mất gốc luyện được không?')">Mất gốc luyện được không?</button>
+        <button class="chat-chip" onclick="handleWindearChatInput('Khác gì eJOY, ELSA?')">Khác gì eJOY, ELSA?</button>
+        <button class="chat-chip" onclick="handleWindearChatInput('Có giọng Anh, Úc không?')">Có giọng Anh, Úc không?</button>
+        <button class="chat-chip chip-accent" onclick="handleWindearChatInput('🎁 Đăng ký Form Waitlist')">🎁 Đăng ký Form Waitlist</button>
       </div>
 
       <!-- Input Footer -->
       <div class="chatbot-input-bar">
-        <input type="text" id="chatbot-input" placeholder="Hỏi Windear AI bất cứ điều gì..." autocomplete="off" />
-        <button id="chatbot-send-btn" class="chatbot-send-btn" aria-label="Gửi">
+        <input type="text" id="chatbot-input" placeholder="Hỏi Windear AI bất cứ điều gì..." autocomplete="off" onkeydown="if(event.key==='Enter') handleWindearChatInput()" />
+        <button id="chatbot-send-btn" class="chatbot-send-btn" onclick="handleWindearChatInput()" aria-label="Gửi">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
@@ -682,7 +682,52 @@
         }
       }
     };
+
+    // Chat Processing Engine (Standalone Failsafe)
+    window.handleWindearChatInput = function(customText) {
+      var inputField = document.getElementById('chatbot-input');
+      var msgs = document.getElementById('chatbot-messages');
+      var text = (customText || (inputField ? inputField.value : '')).trim();
+      if (!text || !msgs) return;
+
+      // User Message
+      var uDiv = document.createElement('div');
+      uDiv.className = 'chat-msg user';
+      uDiv.innerHTML = '<div class="msg-bubble">' + text + '</div>';
+      msgs.appendChild(uDiv);
+      if (inputField) inputField.value = '';
+      msgs.scrollTop = msgs.scrollHeight;
+
+      // Match Answer
+      var lower = text.toLowerCase();
+      var responseText = "Windear AI đã ghi nhận thắc mắc của bạn! Thật ra không cần tốn tiền hay thời gian đâu ạ. Bạn trải nghiệm ngay phương pháp 4 bước bóc tách audio hoàn toàn miễn phí của Windear hoặc giữ suất Waitlist nhận quà nhé!";
+      var ctaHtml = '';
+
+      if (lower.indexOf('phí') !== -1 || lower.indexOf('free') !== -1 || lower.indexOf('tiền') !== -1) {
+        responseText = "Yên tâm 100% nha bạn ơi! Bản Tiêu chuẩn của Windear cam kết MIỄN PHÍ hoàn toàn trọn đời cho mọi tính năng luyện nghe cốt lõi. Không có chi phí ẩn hay bắt buộc nạp tiền gì hết nha!";
+        ctaHtml = '<button class="chat-cta-btn" style="background:#06B6D4; margin-top:10px;" onclick="openWindearSurvey(event)">⚡ Bắt Đầu Luyện Nghe Miễn Phí &rarr;</button>';
+      } else if (lower.indexOf('gốc') !== -1 || lower.indexOf('khó') !== -1 || lower.indexOf('kém') !== -1) {
+        responseText = "Luyện tốt luôn bạn nha! Windear chia nhỏ câu thoại thành từng cụm 2-3 từ ngắn, hỗ trợ dịch nghĩa từng từ và tùy chỉnh tốc độ từ 0.5x. Dù bạn mất gốc thì tai vẫn tự nhận diện được âm thanh dễ dàng.";
+      } else if (lower.indexOf('bận') !== -1 || lower.indexOf('thời gian') !== -1 || lower.indexOf('phút') !== -1) {
+        responseText = "Siêu hiệu quả luôn! Windear thiết kế bài luyện dạng micro-learning chỉ 5 phút/ngày. Nhờ thuật toán tập trung bóc tách đúng từ bị dính bẫy âm thanh, 5 phút trên Windear hiệu quả hơn 45 phút bạn tự bơi ngoài kia đấy!";
+      } else if (lower.indexOf('khác') !== -1 || lower.indexOf('elsa') !== -1 || lower.indexOf('ejoy') !== -1) {
+        responseText = "eJOY/Mochi rất hay để học từ vựng, ELSA mạnh về NÓI. Còn Windear tập trung 100% trị dứt điểm lỗi NGHE trôi tuột chữ bằng thuật toán xẻ nhỏ audio 4 giọng đọc. Ngắn gọn, hiệu quả và Miễn Phí!";
+      } else if (lower.indexOf('giọng') !== -1 || lower.indexOf('anh') !== -1 || lower.indexOf('úc') !== -1 || lower.indexOf('mỹ') !== -1) {
+        responseText = "Có đủ 4 giọng luôn nha! Windear tích hợp audio chuẩn 4 quốc gia: Mỹ 🇺🇸, Anh 🇬🇧, Úc 🇦🇺 và Canada 🇨🇦. Giúp tai bạn quen phản xạ đa giọng.";
+      } else if (lower.indexOf('waitlist') !== -1 || lower.indexOf('form') !== -1 || lower.indexOf('đăng ký') !== -1 || lower.indexOf('pro') !== -1) {
+        responseText = "Đăng ký Form Waitlist hôm nay bạn nhận ngay: 🎁 1 Tháng sử dụng Windear Pro VIP miễn phí khi ra mắt + 📚 Ebook 'Bí kíp nảy số tai tiếng Anh trong 7 ngày' độc quyền!";
+        ctaHtml = '<button class="chat-cta-btn" style="background:#FF6B4A; margin-top:10px;" onclick="openWindearSurvey(event)">🎁 Điền Form Danh Sách Chờ Ngay &rarr;</button>';
+      }
+
+      setTimeout(function() {
+        var bDiv = document.createElement('div');
+        bDiv.className = 'chat-msg bot';
+        bDiv.innerHTML = '<div class="msg-bubble">' + responseText + '</div>' + ctaHtml;
+        msgs.appendChild(bDiv);
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 300);
+    };
   </script>
-  <script src="./main.js?v=8"></script>
+  <script src="./main.js?v=9"></script>
 </body>
 </html>
