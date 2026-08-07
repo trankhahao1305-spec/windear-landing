@@ -597,7 +597,7 @@
             <span class="chatbot-status-text">● Trực tuyến 24/7</span>
           </div>
         </div>
-        <button id="chatbot-close-btn" class="chatbot-header-close" aria-label="Đóng chat">&times;</button>
+        <button id="chatbot-close-btn" class="chatbot-header-close" onclick="toggleWindearChatbot(event)" aria-label="Đóng chat">&times;</button>
       </div>
 
       <!-- Messages Stream -->
@@ -622,8 +622,32 @@
         </button>
       </div>
     </div>
+  </div>
+
   <script>
-    function toggleWindearChatbot(e) {
+    // Self-contained Inline Handler for Modal Survey
+    window.openWindearSurvey = function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var modal = document.getElementById('survey-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.cssText = 'display: flex !important; opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; z-index: 2147483647 !important; position: fixed !important; inset: 0 !important; background: rgba(15, 23, 42, 0.88) !important; align-items: center !important; justify-content: center !important; padding: 16px !important;';
+        document.body.style.overflow = 'hidden';
+      }
+    };
+
+    window.closeWindearSurvey = function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var modal = document.getElementById('survey-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.cssText = 'display: none !important; opacity: 0 !important; pointer-events: none !important;';
+        document.body.style.overflow = '';
+      }
+    };
+
+    // Self-contained Inline Handler for Chatbot Window
+    window.toggleWindearChatbot = function(e) {
       if (e && e.preventDefault) e.preventDefault();
       var chatWin = document.getElementById('chatbot-window');
       var togBtn = document.getElementById('chatbot-toggle-btn');
@@ -631,11 +655,9 @@
       
       var isVisible = chatWin.style.display === 'flex' || chatWin.classList.contains('active');
       if (isVisible) {
-        chatWin.style.setProperty('display', 'none', 'important');
-        chatWin.style.setProperty('opacity', '0', 'important');
-        chatWin.style.setProperty('pointer-events', 'none', 'important');
         chatWin.classList.remove('active');
         chatWin.classList.add('hidden');
+        chatWin.style.cssText = 'display: none !important; opacity: 0 !important; pointer-events: none !important;';
         if (togBtn) {
           var iconOpen = togBtn.querySelector('.chat-icon-open');
           var iconClose = togBtn.querySelector('.chat-icon-close');
@@ -643,33 +665,24 @@
           if (iconClose) iconClose.style.display = 'none';
         }
       } else {
-        chatWin.style.setProperty('display', 'flex', 'important');
-        chatWin.style.setProperty('opacity', '1', 'important');
-        chatWin.style.setProperty('visibility', 'visible', 'important');
-        chatWin.style.setProperty('pointer-events', 'auto', 'important');
-        chatWin.style.setProperty('z-index', '2147483647', 'important');
-        chatWin.classList.remove('hidden');
         chatWin.classList.add('active');
+        chatWin.classList.remove('hidden');
+        chatWin.style.cssText = 'display: flex !important; opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; z-index: 2147483647 !important; position: fixed !important; bottom: 85px !important; right: 25px !important; width: 380px !important; max-width: calc(100vw - 32px) !important; height: 520px !important; max-height: calc(100vh - 120px) !important; background: #0F172A !important; border: 2px solid #06B6D4 !important; border-radius: 20px !important; box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 40px rgba(6,182,212,0.4) !important; flex-direction: column !important; overflow: hidden !important;';
+        
         if (togBtn) {
           var iconOpen = togBtn.querySelector('.chat-icon-open');
           var iconClose = togBtn.querySelector('.chat-icon-close');
           if (iconOpen) iconOpen.style.display = 'none';
           if (iconClose) iconClose.style.display = 'block';
         }
-        if (window.triggerGreetingIfEmpty) {
-          window.triggerGreetingIfEmpty();
+
+        var msgs = document.getElementById('chatbot-messages');
+        if (msgs && msgs.children.length === 0) {
+          msgs.innerHTML = '<div class="chat-msg bot"><div class="msg-bubble">Chào bạn nha! 👋 Mình là Trợ lý Windear AI đây. Có phải bạn đang gặp tình trạng "biết từ vựng nhưng người bản xứ nói nhanh là nghe trôi tuột chữ" không? Bạn cần tư vấn hay có thắc mắc gì cứ hỏi mình thoải mái nhé!</div><button class="chat-cta-btn" style="background:#06B6D4; margin-top:10px;" onclick="openWindearSurvey(event)">⚡ Bắt Đầu Luyện Nghe Miễn Phí &rarr;</button></div>';
         }
       }
-    }
-
-    // Document-Level Event Capture Failsafe
-    document.addEventListener('click', function(e) {
-      var target = e.target;
-      if (target && (target.id === 'chatbot-toggle-btn' || target.closest('#chatbot-toggle-btn') || (target.innerText && target.innerText.indexOf('Tư vấn 24/7') !== -1))) {
-        toggleWindearChatbot(e);
-      }
-    }, true);
+    };
   </script>
-  <script src="./main.js?v=5"></script>
+  <script src="./main.js?v=8"></script>
 </body>
 </html>
