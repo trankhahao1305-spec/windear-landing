@@ -1,0 +1,40 @@
+<svg width="400" height="220" viewBox="0 0 400 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer Circular Shield Contour -->
+  <path d="M 140 30 A 75 75 0 1 0 255 125" stroke="url(#logo-teal-grad)" stroke-width="8" stroke-linecap="round" fill="none"/>
+  
+  <!-- Ear & Soundwave Lines -->
+  <path d="M 160 110 C 160 70, 205 45, 235 70 C 255 90, 250 120, 230 135 C 210 150, 195 160, 200 180 C 205 195, 225 195, 240 180" stroke="url(#logo-blue-grad)" stroke-width="7" stroke-linecap="round" fill="none"/>
+  
+  <!-- Horizontal Wind Swirl Lines -->
+  <path d="M 145 120 Q 200 100, 255 115 T 285 100" stroke="#06B6D4" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M 155 135 Q 210 120, 265 130 T 295 115" stroke="url(#logo-orange-grad)" stroke-width="5" stroke-linecap="round" fill="none"/>
+  
+  <!-- Orange Accent Sphere -->
+  <circle cx="262" cy="118" r="8" fill="#FF6B4A"/>
+  
+  <!-- Typography: Wind Ear -->
+  <text x="200" y="185" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="34" text-anchor="middle">
+    <tspan fill="#0284C7">Wind</tspan>
+    <tspan fill="#06B6D4"> Ear</tspan>
+  </text>
+
+  <!-- Tagline: English Listening App -->
+  <text x="200" y="210" font-family="'Plus Jakarta Sans', sans-serif" font-weight="600" font-size="16" fill="#475569" text-anchor="middle" letter-spacing="0.5">
+    English Listening App
+  </text>
+
+  <defs>
+    <linearGradient id="logo-blue-grad" x1="160" y1="45" x2="250" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0284C7"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+    <linearGradient id="logo-teal-grad" x1="140" y1="30" x2="255" y2="125" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#10B981"/>
+    </linearGradient>
+    <linearGradient id="logo-orange-grad" x1="155" y1="135" x2="295" y2="115" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06B6D4"/>
+      <stop offset="0.7" stop-color="#FF6B4A"/>
+    </linearGradient>
+  </defs>
+</svg>

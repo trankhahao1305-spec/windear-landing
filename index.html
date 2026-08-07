@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windear — App Luyện Nghe Tiếng Anh Miễn Phí | Nghe CHẮC CHẮN HIỂU</title>
+  <meta name="description" content="Windear - Web app luyện nghe tiếng Anh miễn phí hoàn toàn. Phương pháp chia nhỏ từng khúc audio, nghe chắc chắn hiểu, Nhanh mấy cũng nghe ra. Khó mấy cũng hiểu ra.">
+  <link rel="icon" type="image/png" href="/logo.png">
+  
+  <!-- Google Fonts: Plus Jakarta Sans for ultra clean & bold mobile typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- BACKGROUND DECORATIVE EAR-WIND MOTIFS -->
+  <div class="ear-wind-bg-motif motif-hero">
+    <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M150 250C150 170 210 100 290 100C370 100 420 160 410 230C400 300 320 370 240 370C180 370 160 330 180 290C200 250 250 250 280 230C310 210 320 180 300 160C280 140 240 150 220 180" stroke="url(#gradient-teal)" stroke-width="24" stroke-linecap="round" opacity="0.12"/>
+      <path d="M100 280C140 280 200 240 260 250C320 260 380 210 430 200" stroke="url(#gradient-orange)" stroke-width="12" stroke-linecap="round" opacity="0.15"/>
+      <circle cx="340" cy="220" r="14" fill="#FF6B4A" opacity="0.25"/>
+      <defs>
+        <linearGradient id="gradient-teal" x1="150" y1="100" x2="410" y2="370" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#06B6D4"/>
+          <stop offset="1" stop-color="#0284C7"/>
+        </linearGradient>
+        <linearGradient id="gradient-orange" x1="100" y1="280" x2="430" y2="200" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FF6B4A"/>
+          <stop offset="1" stop-color="#FFA84A"/>
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="container header-container">
+      <a href="#" class="brand-logo">
+        <img src="./logo.png" onerror="this.onerror=null; this.src='./logo.svg';" alt="Windear Logo" class="logo-img">
+        <div class="brand-text-group">
+          <span class="brand-title">Windear</span>
+          <span class="brand-tagline">English Listening App</span>
+        </div>
+      </a>
+      <div class="header-badge">
+        <span class="pulse-dot"></span>
+        <span class="badge-text">Miễn Phí Hoàn Toàn</span>
+      </div>
+      <a href="#survey" onclick="openWindearSurvey(event)" class="btn btn-accent btn-header js-open-survey-modal">Bắt đầu ngay</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- SECTION 1: HERO -->
+    <section class="hero-section" id="hero">
+      <div class="container hero-container">
+        
+        <!-- Gamification Floating Badge in Hero -->
+        <div class="streak-hero-banner">
+          <div class="streak-badge">
+            <span class="fire-icon">🔥</span>
+            <span class="streak-text">Chuỗi 7 ngày luyện tập</span>
+          </div>
+          <div class="progress-preview">
+            <span class="progress-label">🎯 142 từ đã nằm lòng</span>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" style="width: 85%;"></div>
+            </div>
+            <span class="progress-percent">85% miễn nghe lại</span>
+          </div>
+        </div>
+
+        <div class="hero-content">
+          <h1 class="hero-headline">
+            Lộ Trình Luyện Tai 4 Bước <span class="highlight-teal">Trị Dứt Điểm</span> Chứng 'Nghe Trôi Tuột Chữ'<br>
+            <span class="headline-sub-bold">Chấp mọi tốc độ 2.0x & đa giọng bản xứ — Miễn phí 100%</span>
+          </h1>
+
+          <p class="hero-subheadline">
+            Khác với các app bắt bạn ngồi gõ chép chính tả mỏi tay hay tự bơi trong phim ảnh, Windear sở hữu <strong>thuật toán tự bóc tách audio</strong> giúp bạn nghe lủng lỗ tai từ khó trước với 4 giọng đọc chuẩn (Mỹ 🇺🇸, Anh 🇬🇧, Úc 🇦🇺, Canada 🇨🇦). Chỉ 5 phút/ngày, tai tự nảy số — nhanh mấy cũng nghe ra, khó mấy cũng hiểu trọn vẹn.
+          </p>
+
+          <div class="hero-cta-group" id="register">
+            <a href="#survey" onclick="openWindearSurvey(event)" class="btn btn-accent btn-large hero-cta-main js-open-survey-modal">
+              <span>Bắt đầu luyện nghe miễn phí với Windear</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="#method" class="btn btn-ghost hero-cta-sub">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <span>Xem cách hoạt động — mất 2 phút</span>
+            </a>
+          </div>
+
+          <!-- Trust Bar -->
+          <div class="trust-bar">
+            <div class="trust-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Không chép chính tả mỏi tay</span>
+            </div>
+            <span class="trust-dot">·</span>
+            <div class="trust-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Tự bóc tách 4 giọng bản xứ</span>
+            </div>
+            <span class="trust-dot">·</span>
+            <div class="trust-item">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>100% Miễn phí không giới hạn</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 2: PAIN SECTION -->
+    <section class="pain-section" id="pain">
+      <div class="container">
+        
+        <div class="section-header text-center">
+          <span class="section-tag tag-orange">Vì sao nghe hoài mà không hiểu?</span>
+          <h2 class="section-title">Bạn đã từng...?</h2>
+        </div>
+
+        <div class="pain-grid">
+          <div class="pain-card">
+            <div class="pain-icon-wrapper">
+              <span class="pain-emoji">👂💨</span>
+            </div>
+            <p class="pain-text">Bật một video tiếng Anh lên, banh lỗ tai ra nghe mà chữ nào cũng trôi tuột qua</p>
+          </div>
+
+          <div class="pain-card">
+            <div class="pain-icon-wrapper">
+              <span class="pain-emoji">🧩❌</span>
+            </div>
+            <p class="pain-text">Biết hết từ vựng trong câu mà ghép lại vẫn không hiểu người ta nói gì</p>
+          </div>
+
+          <div class="pain-card">
+            <div class="pain-icon-wrapper">
+              <span class="pain-emoji">🎙️😵</span>
+            </div>
+            <p class="pain-text">Nghe được giọng Mỹ chuẩn trên app học, ra đời gặp giọng thật là "tịch" luôn</p>
+          </div>
+
+          <div class="pain-card">
+            <div class="pain-icon-wrapper">
+              <span class="pain-emoji">💸📉</span>
+            </div>
+            <p class="pain-text">Luyện nghe bao năm, tốn bao nhiêu tiền, mà vẫn giậm chân tại chỗ</p>
+          </div>
+        </div>
+
+        <!-- Copy Chuyển Tiếp Dark Card -->
+        <div class="pain-transition-card">
+          <div class="transition-badge">Sự Thật Mới</div>
+          <p class="transition-text">
+            Thưa các bạn, không phải tại bạn dở đâu. Tại vì cách nghe truyền thống — mở lên và ráng nghe cả câu — nó xưa như trái đất rồi. Cách đó không hiệu quả. Cái hiệu quả là phải nghe từng khúc nhỏ trước, nghe nát nó ra, rồi mới ráp lại thành cả câu. Đó chính là điều app này làm giúp bạn, tự động, không cần tự mò.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 3: PHƯƠNG PHÁP (4 Bước Step-card + Gamification) -->
+    <section class="method-section" id="method">
+      <div class="container">
+        
+        <div class="section-header text-center">
+          <span class="section-tag tag-teal">4 bước "siêu dễ", giờ máy làm giùm bạn</span>
+          <h2 class="section-title">Phương pháp CHẮC CHẮN HIỂU — 4 bước, app lo hết</h2>
+        </div>
+
+        <div class="steps-grid">
+          
+          <!-- Step 1 -->
+          <div class="step-card">
+            <div class="step-header">
+              <div class="step-number-badge">1</div>
+              <h3 class="step-title">Bước 1 — Chọn chủ đề bạn thích</h3>
+            </div>
+            <p class="step-desc">
+              Mình thích cái gì thì mới có động lực nghe cái đó. Thích tiền thì nghe money, thích yêu đương thì nghe love, thích ai đó thì nghe về người đó. App tự tìm video khớp sở thích của bạn — có phụ đề gốc, không dính MV ca nhạc.
+            </p>
+            <div class="step-mockup-tag-list">
+              <span class="mockup-chip active">💰 Money & Success</span>
+              <span class="mockup-chip">❤️ Love & Dating</span>
+              <span class="mockup-chip">🎬 Movies & Pop</span>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-card">
+            <div class="step-header">
+              <div class="step-number-badge">2</div>
+              <h3 class="step-title">Bước 2 — Xử lý từ vựng tự động</h3>
+            </div>
+            <p class="step-desc">
+              Chữ nào bạn không biết đọc, không biết nghe, không biết nghĩa — app note lại giùm bạn, dịch nghĩa trong đúng ngữ cảnh câu, không dịch tầm bậy tầm bạ kiểu "cắt bánh mì" như học chay.
+            </p>
+            <div class="step-mockup-vocab-box">
+              <div class="vocab-item">
+                <span class="vocab-word">piece of cake</span>
+                <span class="vocab-arrow">→</span>
+                <span class="vocab-meaning">dễ như ăn kẹo (chuẩn ngữ cảnh)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-card">
+            <div class="step-header">
+              <div class="step-number-badge">3</div>
+              <h3 class="step-title">Bước 3 — Nghe lủng lỗ tai từng từ, đa giọng</h3>
+            </div>
+            <p class="step-desc">
+              Trước khi nghe cả câu, app cho bạn nghe riêng từng từ khó — bằng nhiều giọng khác nhau: Mỹ, Anh, Úc, giọng vùng miền. Nghe 5 người nói khác nhau, để gặp giọng nào bạn cũng không còn "tịch".
+            </p>
+            <div class="step-mockup-voices">
+              <span class="voice-badge">🇺🇸 Mỹ</span>
+              <span class="voice-badge">🇬🇧 Anh</span>
+              <span class="voice-badge">🇦🇺 Úc</span>
+              <span class="voice-badge">🇨🇦 Canada</span>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="step-card">
+            <div class="step-header">
+              <div class="step-number-badge">4</div>
+              <h3 class="step-title">Bước 4 — Ráp lại nghe nguyên câu — và bạn sẽ bất ngờ</h3>
+            </div>
+            <p class="step-desc">
+              Sau khi từng từ đã nằm lòng trong lỗ tai, quay lại nghe nguyên câu gốc — tự nhiên bạn nghe ra hết, dù người ta nói nhanh cỡ nào. Đó là sự bá đạo của phương pháp này.
+            </p>
+            <div class="step-mockup-mastery">
+              <span class="mastery-icon">⚡</span>
+              <span class="mastery-text">Audio gốc 2.0x tốc độ → Vẫn hiểu 100%!</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Interactive Soundwave Demo Player Widget -->
+        <div class="interactive-demo-card">
+          <div class="demo-header">
+            <div class="demo-title-group">
+              <span class="demo-tag">HÃY THỬ NGHIỆM</span>
+              <h4 class="demo-title">Minh Họa Trải Nghiệm "Nghe Từng Khúc Nhỏ"</h4>
+            </div>
+            <div class="streak-pill">
+              🔥 Streak +1 hôm nay
+            </div>
+          </div>
+
+          <div class="demo-player-box">
+            <div class="audio-sentence-display">
+              "It's <span class="highlight-chunk" id="chunk-word">an absolute piece of cake</span> once you get used to it!"
+            </div>
+
+            <!-- Animated Soundwave Visualizer -->
+            <div class="soundwave-bar-container" id="soundwave">
+              <span class="bar bar-1"></span>
+              <span class="bar bar-2"></span>
+              <span class="bar bar-3"></span>
+              <span class="bar bar-4"></span>
+              <span class="bar bar-5"></span>
+              <span class="bar bar-6"></span>
+              <span class="bar bar-7"></span>
+              <span class="bar bar-8"></span>
+              <span class="bar bar-9"></span>
+              <span class="bar bar-10"></span>
+            </div>
+
+            <div class="demo-controls">
+              <button class="btn btn-accent btn-play" id="btn-play-chunk">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <span>Nghe từng từ khó (Bước 3)</span>
+              </button>
+
+              <button class="btn btn-teal-outline btn-play" id="btn-play-full">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <span>Nghe nguyên câu nhanh (Bước 4)</span>
+              </button>
+            </div>
+            <p class="demo-note" id="demo-status-text">Bấm thử để cảm nhận sự khác biệt khi tai nghe từng khúc nát ra!</p>
+          </div>
+        </div>
+
+        <!-- Callout Box -->
+        <div class="callout-box">
+          <div class="callout-icon">💡</div>
+          <p class="callout-text">
+            Mỗi ngày chỉ cần 5–10 phút. Không cần giỏi tiếng Anh. Không cần vốn từ nhiều. Càng luyện, càng nhiều từ bạn "miễn nghe lại" — vì đã nằm lòng trong lỗ tai rồi.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 4: VÌ SAO PHƯƠNG PHÁP NÀY HIỆU QUẢ -->
+    <section class="why-section" id="why">
+      <div class="container">
+        
+        <div class="section-header text-center">
+          <span class="section-tag tag-teal">Đây không phải mẹo vặt — đây là nguyên lý</span>
+          <h2 class="section-title">Vì sao phương pháp này hiệu quả?</h2>
+        </div>
+
+        <div class="why-grid">
+          
+          <div class="why-card">
+            <div class="why-icon-box">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="why-content">
+              <h3 class="why-card-title">1. Nghe được từng khúc nhỏ → chắc chắn nghe được cả câu.</h3>
+              <p class="why-card-desc">Người ta không nghe được một câu vì ngay cả từng từ cũng chưa nghe ra. Xử lý gốc rễ trước.</p>
+            </div>
+          </div>
+
+          <div class="why-card">
+            <div class="why-icon-box">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <div class="why-content">
+              <h3 class="why-card-title">2. Học có kế thừa.</h3>
+              <p class="why-card-desc">Từ nào nghe ra một lần, lần sau gặp lại là nhận ra liền — không cần luyện lại. Càng dùng app, càng nghe nhanh, càng ít việc phải làm.</p>
+            </div>
+          </div>
+
+          <div class="why-card">
+            <div class="why-icon-box">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </div>
+            <div class="why-content">
+              <h3 class="why-card-title">3. Nghe đa giọng, đa ngữ điệu.</h3>
+              <p class="why-card-desc">Giọng Mỹ, Anh, Úc, New York, Texas... nghe đủ kiểu để gặp ai nói bạn cũng hiểu, không lệ thuộc một giọng "chuẩn" duy nhất.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 5: CAM KẾT CỦA WINDEAR -->
+    <section class="trust-section" id="commitments">
+      <div class="container">
+        
+        <div class="section-header text-center">
+          <span class="section-tag tag-orange">Tại sao tin tôi?</span>
+          <h2 class="section-title">Cam kết của Windear — không hứa suông</h2>
+        </div>
+
+        <div class="commitments-grid">
+          
+          <div class="commitment-card">
+            <div class="commitment-badge">01</div>
+            <h3 class="commitment-title">Miễn phí hoàn toàn</h3>
+            <p class="commitment-desc">Không có "dùng thử rồi mới tính tiền", không thẻ tín dụng.</p>
+          </div>
+
+          <div class="commitment-card">
+            <div class="commitment-badge">02</div>
+            <h3 class="commitment-title">Phương pháp không phải mẹo vặt</h3>
+            <p class="commitment-desc">Dựa trên nguyên lý: nghe được từng khúc nhỏ thì chắc chắn nghe được cả câu (giải thích chi tiết ở mục 4).</p>
+          </div>
+
+          <div class="commitment-card">
+            <div class="commitment-badge">03</div>
+            <h3 class="commitment-title">Học có kế thừa thật sự</h3>
+            <p class="commitment-desc">Windear nhớ những từ bạn đã nghe ra, để bạn thấy rõ mình tiến bộ mỗi ngày (gamification: chuỗi ngày luyện tập, huy hiệu từ vựng đã "nằm lòng").</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 6: FAQ (ACCORDION) -->
+    <section class="faq-section" id="faq">
+      <div class="container">
+        
+        <div class="section-header text-center">
+          <span class="section-tag tag-teal">Giải đáp thắc mắc</span>
+          <h2 class="section-title">Câu hỏi thường gặp</h2>
+        </div>
+
+        <div class="faq-accordion">
+          
+          <div class="faq-item active">
+            <button class="faq-question" aria-expanded="true">
+              <span>App này khác gì mấy app học tiếng Anh khác?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Mấy app khác cho bạn nghe bài mẫu có sẵn. App này để bạn chọn đúng cái mình thích nghe, xử lý đúng từ mình chưa biết, và luyện đúng chỗ mình còn yếu — không học lan man.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>Tôi mất căn bản tiếng Anh có làm được không?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Được. Đây là điều tôi cam kết ngay từ đầu — kể cả ngữ pháp bạn còn yếu, từ vựng còn ít, bạn vẫn nghe ra và làm theo được.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>Mỗi ngày cần bao nhiêu thời gian?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>5–10 phút. Không cần hơn.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" aria-expanded="false">
+              <span>Có tốn phí không?</span>
+              <svg class="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-answer">
+              <p>Không. Windear miễn phí hoàn toàn.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 7: FINAL CTA -->
+    <section class="final-cta-section">
+      <div class="container text-center">
+        <h2 class="final-cta-heading">Đừng để thêm một năm nữa trôi qua mà vẫn nghe không ra</h2>
+        <p class="final-cta-sub">
+          Bạn đã lãng phí bao lâu rồi cho việc luyện nghe mà không có phương pháp đúng? Bây giờ có rồi. Bắt đầu đi, 5 phút đầu tiên free.
+        </p>
+        <div class="final-cta-btn-wrapper">
+          <a href="#survey" onclick="openWindearSurvey(event)" class="btn btn-accent btn-large final-cta-btn js-open-survey-modal">
+            <span>Luyện nghe ngay — Miễn phí</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <div class="footer-brand">
+        <img src="./logo.png" onerror="this.onerror=null; this.src='./logo.svg';" alt="Windear Logo" class="footer-logo">
+        <div>
+          <span class="footer-title">Windear</span>
+          <p class="footer-copy">English Listening App — Phương pháp nghe chắc chắn hiểu</p>
+        </div>
+      </div>
+      <p class="footer-rights">&copy; 2026 Windear. Miễn phí hoàn toàn.</p>
+    </div>
+  </footer>
+
+  <!-- STICKY MOBILE CTA BAR -->
+  <div class="mobile-sticky-cta" id="mobile-sticky">
+    <div class="sticky-container">
+      <div class="sticky-text-info">
+        <span class="sticky-title">Windear App</span>
+        <span class="sticky-sub">Nghe chắc chắn hiểu · 100% Free</span>
+      </div>
+      <a href="#survey" onclick="openWindearSurvey(event)" class="btn btn-accent btn-sticky js-open-survey-modal">Luyện nghe ngay — Miễn phí 🚀</a>
+    </div>
+  </div>
+
+  <!-- GOOGLE FORM SURVEY MODAL -->
+  <div class="modal-overlay" id="survey-modal" aria-hidden="true">
+    <div class="modal-container" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      
+      <div class="modal-header-bar">
+        <div class="modal-title-group">
+          <span class="modal-badge">Bắt đầu luyện nghe miễn phí</span>
+          <h3 class="modal-title" id="modal-title">Khảo Sát Nhu Cầu Người Dùng Windear</h3>
+          <button class="btn-skip-link" id="modal-skip-btn">
+            Hoặc bỏ qua khảo sát, trải nghiệm bài học Windear ngay &rarr;
+          </button>
+        </div>
+        <button class="modal-close-btn" id="modal-close" aria-label="Đóng modal">&times;</button>
+      </div>
+
+      <!-- VIEW 1: NATIVE WINDEAR HTML FORM -->
+      <div class="modal-form-view" id="modal-form-view">
+        <div class="modal-guide-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Điền thông tin bên dưới để nhận 1 Tháng Pro VIP + Ebook Luyện Tai Miễn Phí</span>
+        </div>
+
+        <form id="native-customer-form" class="native-customer-form" name="customer-waitlist" method="POST" data-netlify="true">
+          <input type="hidden" name="form-name" value="customer-waitlist" />
+          
+          <div class="form-group">
+            <label for="cust-name">Họ và tên <span class="req-star">*</span></label>
+            <input type="text" id="cust-name" name="name" placeholder="Ví dụ: Nguyễn Văn A" required />
+          </div>
+
+          <div class="form-group">
+            <label for="cust-email">Địa chỉ Email <span class="req-star">*</span></label>
+            <input type="email" id="cust-email" name="email" placeholder="email@gmail.com" required />
+          </div>
+
+          <div class="form-group">
+            <label for="cust-phone">Số điện thoại / Zalo <span class="req-star">*</span></label>
+            <input type="tel" id="cust-phone" name="phone" placeholder="0901234567" required />
+          </div>
+
+          <div class="form-group">
+            <label for="cust-goal">Mục tiêu luyện nghe của bạn</label>
+            <select id="cust-goal" name="goal">
+              <option value="Luyện thi IELTS / TOEIC Listening">Luyện thi IELTS / TOEIC Listening</option>
+              <option value="Giao tiếp công việc với người nước ngoài">Giao tiếp công việc với người nước ngoài</option>
+              <option value="Xem phim, video tiếng Anh không cần sub">Xem phim, video tiếng Anh không cần sub</option>
+              <option value="Mất gốc, muốn luyện lại phản xạ nghe từ đầu">Mất gốc, muốn luyện lại phản xạ nghe từ đầu</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="cust-note">Phản hồi / Ghi chú cho Windear (tùy chọn)</label>
+            <textarea id="cust-note" name="note" rows="2" placeholder="Ví dụ: Mình rất hay bị nghe trôi chữ khi nghe giọng Anh-Úc..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-accent btn-large btn-submit-form" id="btn-native-submit">
+            <span>🚀 Đăng ký Waitlist & Nhận Quà Ngay</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- VIEW 2: CUSTOM THANK YOU SCREEN -->
+      <div class="modal-thankyou-view" id="modal-thankyou-view" style="display: none;">
+        <div class="thankyou-content">
+          <div class="thankyou-icon-wrapper">
+            <div class="thankyou-circle-pulse"></div>
+            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#FF6B4A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+
+          <h3 class="thankyou-title">Cảm ơn bạn đã đăng ký!</h3>
+          <p class="thankyou-desc">
+            Windear sẽ liên hệ qua Zalo trong ít phút để gửi bạn link luyện nghe miễn phí.
+          </p>
+
+          <button class="btn btn-accent btn-large thankyou-close-btn" id="btn-close-thankyou">
+            Đóng cửa sổ
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WINDEAR FLOATING SALES CHATBOT -->
+  <div id="windear-chatbot-root">
+    <!-- Floating Trigger Button -->
+    <button id="chatbot-toggle-btn" class="chatbot-toggle-btn" onclick="toggleWindearChatbot(event)" aria-label="Mở chat tư vấn 24/7">
+      <span class="chat-badge-pulse"></span>
+      <svg class="chat-icon-open" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <svg class="chat-icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      <span class="chat-btn-text">Tư vấn 24/7</span>
+    </button>
+
+    <!-- Chatbot Window -->
+    <div id="chatbot-window" class="chatbot-window hidden">
+      <!-- Header -->
+      <div class="chatbot-header">
+        <div class="chatbot-brand-info">
+          <div class="chatbot-avatar-circle">
+            <span class="avatar-emoji">🎧</span>
+            <span class="online-dot"></span>
+          </div>
+          <div class="chatbot-title-meta">
+            <h4 class="chatbot-title-text">Windear AI Trợ Lý</h4>
+            <span class="chatbot-status-text">● Trực tuyến 24/7</span>
+          </div>
+        </div>
+        <button id="chatbot-close-btn" class="chatbot-header-close" aria-label="Đóng chat">&times;</button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="chatbot-messages" class="chatbot-messages">
+        <!-- Messages appended dynamically -->
+      </div>
+
+      <!-- Quick Chips -->
+      <div id="chatbot-quick-replies" class="chatbot-quick-replies">
+        <button class="chat-chip" data-query="free">Miễn phí thật không?</button>
+        <button class="chat-chip" data-query="lost">Mất gốc luyện được không?</button>
+        <button class="chat-chip" data-query="diff">Khác gì eJOY, ELSA?</button>
+        <button class="chat-chip" data-query="accents">Có giọng Anh, Úc không?</button>
+        <button class="chat-chip chip-accent" data-query="waitlist">🎁 Đăng ký Form Waitlist</button>
+      </div>
+
+      <!-- Input Footer -->
+      <div class="chatbot-input-bar">
+        <input type="text" id="chatbot-input" placeholder="Hỏi Windear AI bất cứ điều gì..." autocomplete="off" />
+        <button id="chatbot-send-btn" class="chatbot-send-btn" aria-label="Gửi">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./main.js"></script>
+</body>
+</html>
