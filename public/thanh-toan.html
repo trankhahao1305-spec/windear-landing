@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh Toán Tự Động Qua SePay — Windear App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B1120;
+      --card: #1E293B;
+      --primary: #06B6D4;
+      --accent: #FF6B4A;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #334155;
+      --success: #10B981;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .checkout-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 520px; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .header { text-align: center; margin-bottom: 24px; }
+    .badge { display: inline-block; background: rgba(6,182,212,0.15); color: var(--primary); padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 700; margin-bottom: 8px; border: 1px solid rgba(6,182,212,0.3); }
+    .title { font-size: 22px; font-weight: 800; }
+    .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #E2E8F0; }
+    .form-control { width: 100%; background: #0B1120; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: #fff; font-size: 14px; }
+    .form-control:focus { outline: none; border-color: var(--primary); }
+
+    .btn { width: 100%; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { background: var(--primary); color: #0B1120; margin-top: 8px; }
+    .btn-primary:hover { background: #0891B2; }
+
+    /* QR View */
+    .qr-container { text-align: center; display: none; }
+    .qr-image-wrapper { background: #fff; padding: 12px; border-radius: 16px; display: inline-block; margin: 16px 0; border: 4px solid var(--primary); }
+    .qr-image-wrapper img { width: 240px; height: 240px; display: block; }
+    
+    .bank-info { background: #0B1120; border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 20px; font-size: 14px; }
+    .bank-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .bank-row:last-child { margin-bottom: 0; }
+    .bank-row span { color: var(--text-muted); }
+    .bank-row strong { color: #fff; }
+    .copy-highlight { color: var(--primary) !important; font-family: monospace; font-size: 15px; font-weight: 800; }
+
+    .status-box { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #FBBF24; font-size: 14px; font-weight: 700; margin-top: 16px; }
+    .spinner { width: 16px; height: 16px; border: 2px solid #FBBF24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success View */
+    .success-container { text-align: center; display: none; padding: 20px 0; }
+    .success-icon { width: 72px; height: 72px; background: rgba(16,185,129,0.2); border: 2px solid var(--success); color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px; }
+    .success-title { font-size: 24px; font-weight: 800; color: var(--success); margin-bottom: 8px; }
+    .success-desc { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+    .nav-links { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+    .nav-links a { color: var(--text-muted); font-size: 13px; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="checkout-card">
+  <!-- FORM STEP -->
+  <div id="step-form">
+    <div class="header">
+      <span class="badge">THANH TOÁN TỰ ĐỘNG QUA SEPAY</span>
+      <h2 class="title">Đăng Ký & Nhận Sản Phẩm</h2>
+      <p class="subtitle">Quét mã VietQR chuyển khoản, kích hoạt ngay tức thì</p>
+    </div>
+
+    <form id="checkoutForm" onsubmit="handleCheckout(event)">
+      <div class="form-group">
+        <label>Chọn sản phẩm / dịch vụ *</label>
+        <select id="co-product" class="form-control" onchange="updateProductAmount()" required></select>
+      </div>
+
+      <div class="form-group">
+        <label>Họ và tên của bạn *</label>
+        <input type="text" id="co-name" class="form-control" required placeholder="Ví dụ: Trần Khả Hào">
+      </div>
+
+      <div class="form-group">
+        <label>Số điện thoại / Zalo *</label>
+        <input type="tel" id="co-phone" class="form-control" required pattern="[0-9]{9,11}" placeholder="Ví dụ: 0332255107">
+      </div>
+
+      <div class="form-group">
+        <label>Email nhận tài liệu / tài khoản *</label>
+        <input type="email" id="co-email" class="form-control" required placeholder="name@example.com">
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="btn-submit">
+        <span>Tiếp Tục Thanh Toán</span>
+        <span id="display-price">2.000 ₫</span>
+      </button>
+
+      <div class="nav-links">
+        <a href="/" target="_blank">🌐 Về Trang Chủ</a> • 
+        <a href="/admin" target="_blank">⚙️ Xem Trang Admin</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- QR PAYMENT STEP -->
+  <div id="step-qr" class="qr-container">
+    <div class="header">
+      <span class="badge">QUÉT MÃ VIETQR SEPAY</span>
+      <h2 class="title">Chuyển Khoản Ngân Hàng</h2>
+      <p class="subtitle">Hệ thống sẽ tự động xác nhận ngay khi nhận được tiền</p>
+    </div>
+
+    <div class="qr-image-wrapper">
+      <img id="sepay-qr-img" src="" alt="Mã QR SePay">
+    </div>
+
+    <div class="bank-info">
+      <div class="bank-row">
+        <span>Ngân hàng:</span>
+        <strong>MB Bank (Ngân Hàng Quân Đội)</strong>
+      </div>
+      <div class="bank-row">
+        <span>Số tài khoản:</span>
+        <strong class="copy-highlight">0332255107</strong>
+      </div>
+      <div class="bank-row">
+        <span>Chủ tài khoản:</span>
+        <strong>TRAN KHA HAO</strong>
+      </div>
+      <div class="bank-row">
+        <span>Số tiền:</span>
+        <strong class="copy-highlight" id="qr-amount-text">2.000 ₫</strong>
+      </div>
+      <div class="bank-row">
+        <span>Nội dung chuyển khoản:</span>
+        <strong class="copy-highlight" id="qr-code-text">WD12345</strong>
+      </div>
+    </div>
+
+    <div class="status-box">
+      <div class="spinner"></div>
+      <span>Đang chờ bạn quét mã chuyển tiền (hoặc kích hoạt trong /admin)...</span>
+    </div>
+
+    <button onclick="testQuickSuccess()" class="btn" style="background:#1E293B; border:1px solid #334155; color:#94A3B8; font-size:12px; margin-top:14px;">
+      ⚡ Test nhanh: Giả lập đã chuyển tiền thành công
+    </button>
+  </div>
+
+  <!-- SUCCESS STEP -->
+  <div id="step-success" class="success-container">
+    <div class="success-icon">✓</div>
+    <h2 class="success-title">Thanh Toán Thành Công!</h2>
+    <p class="success-desc">Cảm ơn bạn! Hệ thống SePay đã ghi nhận đơn hàng thành công. Tài liệu/sản phẩm đã được kích hoạt.</p>
+    <a href="/" class="btn btn-primary" style="text-decoration:none;">Quay Lại Trang Chủ Windear</a>
+  </div>
+</div>
+
+<script>
+  const defaultProducts = [
+    { id: 1, name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", type: "digital", price: 2000, description: "Ebook PDF hướng dẫn 4 bước luyện tai tiếng Anh chuyên sâu", stock: null },
+    { id: 2, name: "Template Flashcard 4 Giọng Bản Xứ", type: "digital", price: 2000, description: "Template Anki / Notion luyện phản xạ nghe", stock: null },
+    { id: 3, name: "Khóa Coaching 1-1 Luyện Tai 7 Ngày", type: "service", price: 199000, description: "Kèm 1-1 qua Zoom sửa phát âm & phản xạ nghe", stock: null },
+    { id: 4, name: "Tai Nghe Monitor Chuyên Luyện Nghe Windear", type: "physical", price: 350000, description: "Tai nghe có dây kiểm âm lọc tạp âm", stock: 10 }
+  ];
+
+  let currentOrderCode = '';
+  let pollInterval = null;
+  let productsList = JSON.parse(localStorage.getItem('windear_crm_products')) || defaultProducts;
+
+  function formatMoney(amount) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  }
+
+  async function loadProducts() {
+    try {
+      const res = await fetch('/api/products');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length) productsList = data;
+      }
+    } catch (e) {}
+
+    const select = document.getElementById('co-product');
+    select.innerHTML = productsList.map(p => `
+      <option value="${p.id}" data-price="${p.price}">${p.name} — ${formatMoney(p.price)}</option>
+    `).join('');
+    updateProductAmount();
+  }
+
+  function updateProductAmount() {
+    const select = document.getElementById('co-product');
+    const selected = select.options[select.selectedIndex];
+    if (selected) {
+      const price = parseFloat(selected.dataset.price);
+      document.getElementById('display-price').innerText = formatMoney(price);
+    }
+  }
+
+  async function handleCheckout(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerText = 'Đang khởi tạo đơn hàng...';
+
+    const productId = parseInt(document.getElementById('co-product').value);
+    const name = document.getElementById('co-name').value;
+    const phone = document.getElementById('co-phone').value;
+    const email = document.getElementById('co-email').value;
+
+    const prod = productsList.find(p => p.id === productId) || productsList[0];
+    const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+    currentOrderCode = randCode;
+
+    // Lưu vào database / localStorage để admin panel nhìn thấy trạng thái pending
+    const newOrder = {
+      id: Date.now(),
+      customer_id: Date.now(),
+      product_id: prod.id,
+      product_name: prod.name,
+      customer_name: name,
+      customer_phone: phone,
+      amount: prod.price,
+      status: 'pending',
+      order_code: randCode,
+      created_at: new Date().toLocaleString('vi-VN')
+    };
+
+    try {
+      await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: prod.id, name, phone, email })
+      });
+    } catch(err) {}
+
+    // Đồng bộ localStorage
+    let savedOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
+    savedOrders.unshift(newOrder);
+    localStorage.setItem('windear_crm_orders', JSON.stringify(savedOrders));
+
+    // Cập nhật giao diện QR SePay
+    document.getElementById('step-form').style.display = 'none';
+    document.getElementById('step-qr').style.display = 'block';
+
+    const qrUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0332255107&template=compact&amount=${prod.price}&des=${randCode}`;
+    document.getElementById('sepay-qr-img').src = qrUrl;
+    document.getElementById('qr-amount-text').innerText = formatMoney(prod.price);
+    document.getElementById('qr-code-text').innerText = randCode;
+
+    // Lắng nghe trạng thái thành công
+    startPolling(randCode);
+  }
+
+  function startPolling(orderCode) {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(async () => {
+      // 1. Kiểm tra qua Backend
+      try {
+        const res = await fetch(`/api/check-order-status?order_code=${orderCode}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'success') {
+            showSuccess();
+            return;
+          }
+        }
+      } catch(e) {}
+
+      // 2. Kiểm tra qua LocalStorage (khi kích hoạt từ tab Admin)
+      const localOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
+      const found = localOrders.find(o => o.order_code === orderCode);
+      if (found && found.status === 'success') {
+        showSuccess();
+      }
+    }, 2000);
+  }
+
+  function testQuickSuccess() {
+    const localOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
+    const found = localOrders.find(o => o.order_code === currentOrderCode);
+    if (found) found.status = 'success';
+    localStorage.setItem('windear_crm_orders', JSON.stringify(localOrders));
+    showSuccess();
+  }
+
+  function showSuccess() {
+    if (pollInterval) clearInterval(pollInterval);
+    document.getElementById('step-qr').style.display = 'none';
+    document.getElementById('step-success').style.display = 'block';
+  }
+
+  loadProducts();
+</script>
+
+</body>
+</html>
