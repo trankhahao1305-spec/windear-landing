@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windear CRM — Trang Quản Trị Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B1120;
+      --card: #1E293B;
+      --card-hover: #334155;
+      --primary: #06B6D4;
+      --primary-hover: #0891B2;
+      --accent: #FF6B4A;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #334155;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge { background: linear-gradient(135deg, var(--primary), #0284C7); color: #fff; font-weight: 800; font-size: 14px; padding: 6px 12px; border-radius: 8px; }
+    .page-title { font-size: 24px; font-weight: 800; }
+    .header-links a { color: var(--text-muted); text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); transition: 0.2s; margin-left: 8px; }
+    .header-links a:hover { color: #fff; border-color: var(--primary); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 12px; margin-bottom: 24px; }
+    .tab-btn { background: var(--card); border: 1px solid var(--border); color: var(--text-muted); padding: 12px 24px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+    .tab-btn:hover { background: var(--card-hover); color: var(--text); }
+    .tab-btn.active { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(2,132,199,0.15)); border-color: var(--primary); color: var(--primary); }
+    .tab-count { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 99px; font-size: 12px; }
+
+    /* Action bar */
+    .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .btn { padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: var(--primary); color: #0B1120; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Table styles */
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
+    th { background: rgba(0,0,0,0.2); padding: 14px 18px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    td { padding: 14px 18px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 700; }
+    .badge-digital { background: rgba(6,182,212,0.15); color: var(--primary); border: 1px solid rgba(6,182,212,0.3); }
+    .badge-service { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+    .badge-physical { background: rgba(168,85,247,0.15); color: #C084FC; border: 1px solid rgba(168,85,247,0.3); }
+    
+    .status-pending { background: rgba(245,158,11,0.2); color: #FBBF24; border: 1px solid rgba(245,158,11,0.4); }
+    .status-success { background: rgba(16,185,129,0.2); color: #34D399; border: 1px solid rgba(16,185,129,0.4); }
+
+    /* Modal */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--card); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 500px; padding: 24px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 18px; font-weight: 800; }
+    .close-btn { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+    
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .form-control { width: 100%; background: #0B1120; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 14px; }
+    .form-control:focus { outline: none; border-color: var(--primary); }
+    .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo-area">
+      <span class="logo-badge">WINDEAR CRM</span>
+      <h1 class="page-title">Hệ Thống Quản Trị & Đơn Hàng</h1>
+    </div>
+    <div class="header-links">
+      <a href="/" target="_blank">🌐 Xem Trang Chủ</a>
+      <a href="/thanh-toan" target="_blank">💳 Trang Thanh Toán</a>
+    </div>
+  </header>
+
+  <!-- 3 Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('products', this)">
+      📦 Sản Phẩm <span class="tab-count" id="count-products">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('customers', this)">
+      👥 Khách Hàng <span class="tab-count" id="count-customers">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('orders', this)">
+      📋 Đơn Hàng <span class="tab-count" id="count-orders">0</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: SẢN PHẨM -->
+  <div id="tab-products" class="tab-pane">
+    <div class="action-bar">
+      <h3>Danh sách Sản phẩm trong Database (brain.db)</h3>
+      <button class="btn btn-primary" onclick="openProductModal()">+ Thêm Sản Phẩm Mới</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tên Sản Phẩm</th>
+            <th>Loại</th>
+            <th>Giá Bán</th>
+            <th>Mô Tả</th>
+            <th>Tồn Kho (Vật lý)</th>
+            <th>Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody id="products-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 2: KHÁCH HÀNG -->
+  <div id="tab-customers" class="tab-pane" style="display: none;">
+    <div class="action-bar">
+      <h3>Danh sách Khách Hàng (Import từ waitlist.json)</h3>
+      <button class="btn btn-primary" onclick="openCustomerModal()">+ Thêm Khách Hàng</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Họ & Tên</th>
+            <th>Số Điện Thoại</th>
+            <th>Zalo</th>
+            <th>Email</th>
+            <th>Ngày Đăng Ký</th>
+            <th>Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody id="customers-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: ĐƠN HÀNG -->
+  <div id="tab-orders" class="tab-pane" style="display: none;">
+    <div class="action-bar">
+      <h3>Quản Lý Đơn Hàng & Kích Hoạt Thanh Toán SePay</h3>
+      <button class="btn btn-primary" onclick="openOrderModal()">+ Thêm Đơn Hàng Thủ Công</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Mã Đơn</th>
+            <th>Khách Hàng</th>
+            <th>Sản Phẩm</th>
+            <th>Số Tiền</th>
+            <th>Trạng Thái</th>
+            <th>Ngày Mua</th>
+            <th>Kích Hoạt / Thao Tác</th>
+          </tr>
+        </thead>
+        <tbody id="orders-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SẢN PHẨM -->
+<div class="modal" id="productModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title" id="productModalTitle">Thêm Sản Phẩm</h3>
+      <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
+    </div>
+    <form id="productForm" onsubmit="saveProduct(event)">
+      <input type="hidden" id="prod-id">
+      <div class="form-group">
+        <label>Tên sản phẩm *</label>
+        <input type="text" id="prod-name" class="form-control" required placeholder="Ví dụ: Ebook 4 Bước Luyện Tai">
+      </div>
+      <div class="form-group">
+        <label>Loại sản phẩm *</label>
+        <select id="prod-type" class="form-control" onchange="toggleStockField()" required>
+          <option value="digital">Sản phẩm số (Digital) — Không trừ kho</option>
+          <option value="service">Dịch vụ (Service) — Không trừ kho</option>
+          <option value="physical">Sản phẩm vật lý (Physical) — Tự động trừ kho</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Giá bán (VNĐ) *</label>
+        <input type="number" id="prod-price" class="form-control" required placeholder="2000">
+      </div>
+      <div class="form-group" id="stock-group" style="display: none;">
+        <label>Số lượng tồn kho (Bắt buộc với sản phẩm vật lý)</label>
+        <input type="number" id="prod-stock" class="form-control" placeholder="10">
+      </div>
+      <div class="form-group">
+        <label>Mô tả ngắn</label>
+        <textarea id="prod-desc" class="form-control" rows="2" placeholder="Mô tả chi tiết sản phẩm..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Lưu Sản Phẩm</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL KHÁCH HÀNG -->
+<div class="modal" id="customerModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Thêm Khách Hàng</h3>
+      <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+    </div>
+    <form id="customerForm" onsubmit="saveCustomer(event)">
+      <input type="hidden" id="cust-id">
+      <div class="form-group">
+        <label>Họ và tên *</label>
+        <input type="text" id="cust-name" class="form-control" required placeholder="Nguyễn Văn A">
+      </div>
+      <div class="form-group">
+        <label>Số điện thoại *</label>
+        <input type="text" id="cust-phone" class="form-control" required placeholder="0987654321">
+      </div>
+      <div class="form-group">
+        <label>Zalo</label>
+        <input type="text" id="cust-zalo" class="form-control" placeholder="0987654321">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="cust-email" class="form-control" placeholder="email@example.com">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Lưu Khách Hàng</button>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL ĐƠN HÀNG -->
+<div class="modal" id="orderModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title">Thêm Đơn Hàng Mới</h3>
+      <button class="close-btn" onclick="closeModal('orderModal')">&times;</button>
+    </div>
+    <form id="orderForm" onsubmit="saveOrder(event)">
+      <div class="form-group">
+        <label>Khách hàng *</label>
+        <select id="ord-customer" class="form-control" required></select>
+      </div>
+      <div class="form-group">
+        <label>Sản phẩm *</label>
+        <select id="ord-product" class="form-control" onchange="updateOrderPrice()" required></select>
+        <div class="form-hint" id="ord-inventory-notice"></div>
+      </div>
+      <div class="form-group">
+        <label>Số tiền (VNĐ) *</label>
+        <input type="number" id="ord-amount" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label>Trạng thái *</label>
+        <select id="ord-status" class="form-control">
+          <option value="pending">pending (Chờ chuyển khoản)</option>
+          <option value="success">success (Đã thanh toán)</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%;">Tạo Đơn Hàng</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Dữ liệu mặc định từ brain.db & waitlist.json
+  const defaultProducts = [
+    { id: 1, name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", type: "digital", price: 2000, description: "Ebook PDF hướng dẫn 4 bước luyện tai tiếng Anh chuyên sâu", stock: null },
+    { id: 2, name: "Template Flashcard 4 Giọng Bản Xứ", type: "digital", price: 2000, description: "Template Anki / Notion luyện phản xạ nghe", stock: null },
+    { id: 3, name: "Khóa Coaching 1-1 Luyện Tai 7 Ngày", type: "service", price: 199000, description: "Kèm 1-1 qua Zoom sửa phát âm & phản xạ nghe", stock: null },
+    { id: 4, name: "Tai Nghe Monitor Chuyên Luyện Nghe Windear", type: "physical", price: 350000, description: "Tai nghe có dây kiểm âm lọc tạp âm", stock: 10 }
+  ];
+
+  const defaultCustomers = [
+    { id: 1, name: "Trần Khả Hào", phone: "0332255107", zalo: "0332255107", email: "haotrankha53@gmail.com", registered_date: "2026-08-07 14:42:44" },
+    { id: 2, name: "Trần Vương Lâm", phone: "0984840024", zalo: "0984840024", email: "wanglin654654@gmail.com", registered_date: "2026-08-07 14:45:26" }
+  ];
+
+  const defaultOrders = [
+    { id: 1, customer_id: 1, product_id: 1, product_name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", customer_name: "Trần Khả Hào", customer_phone: "0332255107", amount: 2000, status: "pending", order_code: "WD1001", created_at: "2026-08-08 23:55:00" }
+  ];
+
+  let products = JSON.parse(localStorage.getItem('windear_crm_products')) || defaultProducts;
+  let customers = JSON.parse(localStorage.getItem('windear_crm_customers')) || defaultCustomers;
+  let orders = JSON.parse(localStorage.getItem('windear_crm_orders')) || defaultOrders;
+
+  function syncStorage() {
+    localStorage.setItem('windear_crm_products', JSON.stringify(products));
+    localStorage.setItem('windear_crm_customers', JSON.stringify(customers));
+    localStorage.setItem('windear_crm_orders', JSON.stringify(orders));
+  }
+
+  function formatMoney(amount) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  }
+
+  function switchTab(tabName, btn) {
+    document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById('tab-' + tabName).style.display = 'block';
+    if (btn) btn.classList.add('active');
+  }
+
+  function toggleStockField() {
+    const type = document.getElementById('prod-type').value;
+    const stockGroup = document.getElementById('stock-group');
+    if (type === 'physical') {
+      stockGroup.style.display = 'block';
+      document.getElementById('prod-stock').required = true;
+    } else {
+      stockGroup.style.display = 'none';
+      document.getElementById('prod-stock').required = false;
+      document.getElementById('prod-stock').value = '';
+    }
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  async function loadData() {
+    try {
+      const [pRes, cRes, oRes] = await Promise.all([
+        fetch('/api/products').then(r => r.ok ? r.json() : null),
+        fetch('/api/customers').then(r => r.ok ? r.json() : null),
+        fetch('/api/orders').then(r => r.ok ? r.json() : null)
+      ]);
+
+      if (pRes && pRes.length) products = pRes;
+      if (cRes && cRes.length) customers = cRes;
+      if (oRes && oRes.length) orders = oRes;
+    } catch(e) {}
+
+    renderProducts();
+    renderCustomers();
+    renderOrders();
+    syncStorage();
+
+    document.getElementById('count-products').innerText = products.length;
+    document.getElementById('count-customers').innerText = customers.length;
+    document.getElementById('count-orders').innerText = orders.length;
+  }
+
+  function renderProducts() {
+    const tbody = document.getElementById('products-table-body');
+    tbody.innerHTML = products.map(p => `
+      <tr>
+        <td>#${p.id}</td>
+        <td><strong>${p.name}</strong></td>
+        <td><span class="badge badge-${p.type}">${p.type === 'physical' ? 'Vật lý (Physical)' : (p.type === 'digital' ? 'Sản phẩm số' : 'Dịch vụ')}</span></td>
+        <td><strong style="color: var(--primary);">${formatMoney(p.price)}</strong></td>
+        <td style="color: var(--text-muted); font-size: 13px;">${p.description || '—'}</td>
+        <td>${p.type === 'physical' ? `<strong>${p.stock !== null ? p.stock + ' cái' : '0'}</strong>` : '<span style="color:var(--text-muted);">Không áp dụng (Null)</span>'}</td>
+        <td>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem('products', ${p.id})">Xóa</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderCustomers() {
+    const tbody = document.getElementById('customers-table-body');
+    tbody.innerHTML = customers.map(c => `
+      <tr>
+        <td>#${c.id}</td>
+        <td><strong>${c.name}</strong></td>
+        <td>${c.phone || '—'}</td>
+        <td>${c.zalo || '—'}</td>
+        <td>${c.email || '—'}</td>
+        <td style="color: var(--text-muted); font-size: 13px;">${c.registered_date || '—'}</td>
+        <td>
+          <button class="btn btn-sm btn-danger" onclick="deleteItem('customers', ${c.id})">Xóa</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderOrders() {
+    const tbody = document.getElementById('orders-table-body');
+    tbody.innerHTML = orders.map(o => `
+      <tr>
+        <td><strong style="color: var(--primary); font-family: monospace; font-size: 15px;">${o.order_code || 'WD' + o.id}</strong></td>
+        <td><strong>${o.customer_name || 'Khách #' + o.customer_id}</strong><br><small style="color:var(--text-muted);">${o.customer_phone || ''}</small></td>
+        <td>${o.product_name || 'Sản phẩm #' + o.product_id}</td>
+        <td><strong>${formatMoney(o.amount)}</strong></td>
+        <td><span class="badge status-${o.status}">${o.status.toUpperCase()}</span></td>
+        <td style="color: var(--text-muted); font-size: 13px;">${o.created_at}</td>
+        <td>
+          ${o.status === 'pending' ? `
+            <button class="btn btn-sm btn-success" onclick="triggerManualSuccess('${o.order_code || o.id}')">⚡ Kích hoạt Success</button>
+          ` : '<span style="color: var(--success); font-weight:700; font-size:13px;">✅ Đã thanh toán</span>'}
+          <button class="btn btn-sm btn-danger" onclick="deleteItem('orders', ${o.id})">Xóa</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openProductModal() {
+    document.getElementById('productForm').reset();
+    document.getElementById('prod-id').value = '';
+    toggleStockField();
+    openModal('productModal');
+  }
+
+  function openCustomerModal() {
+    document.getElementById('customerForm').reset();
+    openModal('customerModal');
+  }
+
+  function openOrderModal() {
+    const custSelect = document.getElementById('ord-customer');
+    const prodSelect = document.getElementById('ord-product');
+
+    custSelect.innerHTML = customers.map(c => `<option value="${c.id}">${c.name} (${c.phone || c.email})</option>`).join('');
+    prodSelect.innerHTML = products.map(p => `<option value="${p.id}" data-price="${p.price}" data-type="${p.type}">${p.name} — ${formatMoney(p.price)} (${p.type})</option>`).join('');
+
+    updateOrderPrice();
+    openModal('orderModal');
+  }
+
+  function updateOrderPrice() {
+    const prodSelect = document.getElementById('ord-product');
+    const selected = prodSelect.options[prodSelect.selectedIndex];
+    if (selected) {
+      document.getElementById('ord-amount').value = selected.dataset.price;
+      const type = selected.dataset.type;
+      const notice = document.getElementById('ord-inventory-notice');
+      if (type === 'physical') {
+        notice.innerHTML = '⚠️ <span style="color:#C084FC;">Sản phẩm vật lý: Hệ thống sẽ tự động trừ 1 số lượng tồn kho.</span>';
+      } else {
+        notice.innerHTML = '✨ <span style="color:var(--primary);">Sản phẩm số / Dịch vụ: Tồn kho giữ nguyên (Không trừ).</span>';
+      }
+    }
+  }
+
+  async function saveProduct(e) {
+    e.preventDefault();
+    const data = {
+      id: products.length ? Math.max(...products.map(p => p.id)) + 1 : 1,
+      name: document.getElementById('prod-name').value,
+      type: document.getElementById('prod-type').value,
+      price: parseFloat(document.getElementById('prod-price').value),
+      description: document.getElementById('prod-desc').value,
+      stock: document.getElementById('prod-type').value === 'physical' ? parseInt(document.getElementById('prod-stock').value || 0) : null
+    };
+
+    try {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(err) {}
+
+    products.push(data);
+    syncStorage();
+    closeModal('productModal');
+    loadData();
+  }
+
+  async function saveCustomer(e) {
+    e.preventDefault();
+    const data = {
+      id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
+      name: document.getElementById('cust-name').value,
+      phone: document.getElementById('cust-phone').value,
+      zalo: document.getElementById('cust-zalo').value,
+      email: document.getElementById('cust-email').value,
+      registered_date: new Date().toLocaleString('vi-VN')
+    };
+
+    try {
+      await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(err) {}
+
+    customers.push(data);
+    syncStorage();
+    closeModal('customerModal');
+    loadData();
+  }
+
+  async function saveOrder(e) {
+    e.preventDefault();
+    const custId = parseInt(document.getElementById('ord-customer').value);
+    const prodId = parseInt(document.getElementById('ord-product').value);
+    const amount = parseFloat(document.getElementById('ord-amount').value);
+    const status = document.getElementById('ord-status').value;
+
+    const cust = customers.find(c => c.id === custId) || { name: 'Khách hàng', phone: '' };
+    const prod = products.find(p => p.id === prodId) || { name: 'Sản phẩm', type: 'digital' };
+
+    const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+
+    const orderData = {
+      id: orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1,
+      customer_id: custId,
+      product_id: prodId,
+      product_name: prod.name,
+      customer_name: cust.name,
+      customer_phone: cust.phone,
+      amount: amount,
+      status: status,
+      order_code: randCode,
+      created_at: new Date().toLocaleString('vi-VN')
+    };
+
+    // Logic Tồn kho
+    if (prod.type === 'physical') {
+      prod.stock = Math.max(0, (prod.stock || 0) - 1);
+      console.log('📦 Trừ tồn kho vật lý:', prod.name, 'còn', prod.stock);
+    }
+
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+    } catch(err) {}
+
+    orders.unshift(orderData);
+    syncStorage();
+    closeModal('orderModal');
+    loadData();
+  }
+
+  async function triggerManualSuccess(orderCode) {
+    if (!confirm('Bạn có chắc muốn kích hoạt trạng thái SUCCESS cho đơn hàng ' + orderCode + '?')) return;
+    try {
+      await fetch('/api/manual-success-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_code: orderCode })
+      });
+    } catch(err) {}
+
+    const ord = orders.find(o => o.order_code === orderCode || o.id == orderCode);
+    if (ord) ord.status = 'success';
+    syncStorage();
+    loadData();
+  }
+
+  async function deleteItem(table, id) {
+    if (!confirm('Bạn có chắc muốn xóa bản ghi #' + id + '?')) return;
+    try {
+      await fetch(`/api/${table}?id=${id}`, { method: 'DELETE' });
+    } catch(err) {}
+
+    if (table === 'products') products = products.filter(p => p.id !== id);
+    if (table === 'customers') customers = customers.filter(c => c.id !== id);
+    if (table === 'orders') orders = orders.filter(o => o.id !== id);
+    syncStorage();
+    loadData();
+  }
+
+  loadData();
+</script>
+
+</body>
+</html>
