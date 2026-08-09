@@ -283,6 +283,8 @@
 </div>
 
 <script>
+  const CLOUD_API = 'https://kvdb.io/A8v8Qz6D5xQzY7wB2yJ4tK';
+
   const defaultProducts = [
     { id: 1, name: "Sổ Tay 100 Cụm Từ Nối Âm & Nuốt Âm Hollywood", type: "digital", price: 2000, description: "Cẩm nang PDF giải mã 100 cụm từ nuốt âm hay gặp nhất trong phim", stock: null },
     { id: 2, name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", type: "digital", price: 2000, description: "Ebook PDF hướng dẫn 4 bước luyện tai tiếng Anh chuyên sâu", stock: null },
@@ -299,9 +301,15 @@
     { id: 1, customer_id: 1, product_id: 1, product_name: "Sổ Tay 100 Cụm Từ Nối Âm & Nuốt Âm Hollywood", customer_name: "Trần Khả Hào", customer_phone: "0332255107", amount: 2000, status: "pending", order_code: "WD1001", created_at: "2026-08-08 23:55:00" }
   ];
 
-  let products = defaultProducts;
-  let customers = defaultCustomers;
-  let orders = defaultOrders;
+  let products = JSON.parse(localStorage.getItem('windear_crm_products') || 'null') || defaultProducts;
+  let customers = JSON.parse(localStorage.getItem('windear_crm_customers') || 'null') || defaultCustomers;
+  let orders = JSON.parse(localStorage.getItem('windear_crm_orders') || 'null') || defaultOrders;
+
+  function syncStorage() {
+    localStorage.setItem('windear_crm_products', JSON.stringify(products));
+    localStorage.setItem('windear_crm_customers', JSON.stringify(customers));
+    localStorage.setItem('windear_crm_orders', JSON.stringify(orders));
+  }
 
   function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -332,20 +340,43 @@
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
   async function loadData() {
+    // 1. Luôn load từ LocalStorage trước
+    const localO = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
+    const localP = JSON.parse(localStorage.getItem('windear_crm_products') || '[]');
+    const localC = JSON.parse(localStorage.getItem('windear_crm_customers') || '[]');
+
+    if (localO.length) orders = mergeLists(localO, orders, 'order_code');
+    if (localP.length) products = mergeLists(localP, products, 'id');
+    if (localC.length) customers = mergeLists(localC, customers, 'id');
+
+    // 2. Fetch từ Cloud KV
     try {
       const [pRes, cRes, oRes] = await Promise.all([
-        fetch('/api/products').then(r => r.ok ? r.json() : null),
-        fetch('/api/customers').then(r => r.ok ? r.json() : null),
-        fetch('/api/orders').then(r => r.ok ? r.json() : null)
+        fetch(`${CLOUD_API}/products`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${CLOUD_API}/customers`).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(`${CLOUD_API}/orders`).then(r => r.ok ? r.json() : null).catch(() => null)
       ]);
 
-      if (pRes && Array.isArray(pRes) && pRes.length) products = pRes;
-      if (cRes && Array.isArray(cRes) && cRes.length) customers = cRes;
-      if (oRes && Array.isArray(oRes) && oRes.length) orders = oRes;
-    } catch(e) {
-      console.warn('Load API error, using cache:', e);
-    }
+      if (oRes && Array.isArray(oRes) && oRes.length) {
+        orders = mergeLists(oRes, orders, 'order_code');
+      }
+      if (pRes && Array.isArray(pRes) && pRes.length) {
+        products = mergeLists(pRes, products, 'id');
+      }
+      if (cRes && Array.isArray(cRes) && cRes.length) {
+        customers = mergeLists(cRes, customers, 'id');
+      }
+    } catch(e) {}
 
+    // 3. Fallback qua Serverless API
+    try {
+      const oLocal = await fetch('/api/orders').then(r => r.ok ? r.json() : null).catch(() => null);
+      if (oLocal && Array.isArray(oLocal) && oLocal.length) {
+        orders = mergeLists(oLocal, orders, 'order_code');
+      }
+    } catch(e) {}
+
+    syncStorage();
     renderProducts();
     renderCustomers();
     renderOrders();
@@ -353,6 +384,30 @@
     document.getElementById('count-products').innerText = products.length;
     document.getElementById('count-customers').innerText = customers.length;
     document.getElementById('count-orders').innerText = orders.length;
+  }
+
+  function mergeLists(primary, secondary, key) {
+    const map = new Map();
+    (primary || []).forEach(item => { if (item && item[key]) map.set(item[key], item); });
+    (secondary || []).forEach(item => { if (item && item[key] && !map.has(item[key])) map.set(item[key], item); });
+    return Array.from(map.values());
+  }
+
+  async function saveToCloud(collection, data) {
+    try {
+      await fetch(`${CLOUD_API}/${collection}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(e) {}
+    try {
+      await fetch(`/api/${collection}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(e) {}
   }
 
   function renderProducts() {
@@ -450,6 +505,7 @@
   async function saveProduct(e) {
     e.preventDefault();
     const data = {
+      id: products.length ? Math.max(...products.map(p => p.id)) + 1 : 1,
       name: document.getElementById('prod-name').value,
       type: document.getElementById('prod-type').value,
       price: parseFloat(document.getElementById('prod-price').value),
@@ -457,14 +513,9 @@
       stock: document.getElementById('prod-type').value === 'physical' ? parseInt(document.getElementById('prod-stock').value || 0) : null
     };
 
-    try {
-      await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-    } catch(err) {}
-
+    products.unshift(data);
+    syncStorage();
+    await saveToCloud('products', products);
     closeModal('productModal');
     loadData();
   }
@@ -472,20 +523,17 @@
   async function saveCustomer(e) {
     e.preventDefault();
     const data = {
+      id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
       name: document.getElementById('cust-name').value,
       phone: document.getElementById('cust-phone').value,
       zalo: document.getElementById('cust-zalo').value,
-      email: document.getElementById('cust-email').value
+      email: document.getElementById('cust-email').value,
+      registered_date: new Date().toLocaleString('vi-VN')
     };
 
-    try {
-      await fetch('/api/customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-    } catch(err) {}
-
+    customers.unshift(data);
+    syncStorage();
+    await saveToCloud('customers', customers);
     closeModal('customerModal');
     loadData();
   }
@@ -497,19 +545,42 @@
     const amount = parseFloat(document.getElementById('ord-amount').value);
     const status = document.getElementById('ord-status').value;
 
-    try {
-      await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer_id: custId, product_id: prodId, amount, status })
-      });
-    } catch(err) {}
+    const cust = customers.find(c => c.id === custId) || { name: 'Khách hàng', phone: '' };
+    const prod = products.find(p => p.id === prodId) || { name: 'Sản phẩm', type: 'digital' };
 
+    const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+
+    const orderData = {
+      id: Date.now(),
+      customer_id: custId,
+      product_id: prodId,
+      product_name: prod.name,
+      customer_name: cust.name,
+      customer_phone: cust.phone,
+      amount: amount,
+      status: status,
+      order_code: randCode,
+      created_at: new Date().toLocaleString('vi-VN')
+    };
+
+    if (prod.type === 'physical') {
+      prod.stock = Math.max(0, (prod.stock || 0) - 1);
+      await saveToCloud('products', products);
+    }
+
+    orders.unshift(orderData);
+    syncStorage();
+    await saveToCloud('orders', orders);
     closeModal('orderModal');
     loadData();
   }
 
   async function triggerManualSuccess(orderCode) {
+    const ord = orders.find(o => o.order_code === orderCode || o.id == orderCode);
+    if (ord) ord.status = 'success';
+    syncStorage();
+    await saveToCloud('orders', orders);
+
     try {
       await fetch('/api/manual-success-order', {
         method: 'POST',
@@ -518,22 +589,42 @@
       });
     } catch(err) {}
 
-    const ord = orders.find(o => o.order_code === orderCode || o.id == orderCode);
-    if (ord) ord.status = 'success';
+    try {
+      const bc = new BroadcastChannel('windear_crm_channel');
+      bc.postMessage({ type: 'ORDER_ACTIVATED', order_code: orderCode });
+    } catch(e) {}
+
     loadData();
   }
 
   async function deleteItem(table, id) {
     if (!confirm('Bạn có chắc muốn xóa bản ghi #' + id + '?')) return;
-    try {
-      await fetch(`/api/${table}?id=${id}`, { method: 'DELETE' });
-    } catch(err) {}
+    if (table === 'products') products = products.filter(p => p.id !== id);
+    if (table === 'customers') customers = customers.filter(c => c.id !== id);
+    if (table === 'orders') orders = orders.filter(o => o.id !== id);
+    syncStorage();
+    await saveToCloud(table, table === 'products' ? products : (table === 'customers' ? customers : orders));
     loadData();
   }
 
-  // Tải dữ liệu ban đầu và tự động làm mới mỗi 3 giây
+  // Lắng nghe BroadcastChannel & Storage Event tức thì
+  try {
+    const bc = new BroadcastChannel('windear_crm_channel');
+    bc.onmessage = (ev) => {
+      if (ev.data && (ev.data.type === 'NEW_ORDER' || ev.data.type === 'ORDER_ACTIVATED')) {
+        loadData();
+      }
+    };
+  } catch(e) {}
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'windear_crm_orders') {
+      loadData();
+    }
+  });
+
   loadData();
-  setInterval(loadData, 3000);
+  setInterval(loadData, 2000);
 </script>
 
 </body>
