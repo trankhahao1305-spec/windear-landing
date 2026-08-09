@@ -362,7 +362,15 @@
         setStorage('windear_crm_products', products);
       }
       if (Array.isArray(custRes) && custRes.length > 0) {
-        customers = custRes;
+        const localCusts = getStorage('windear_crm_customers', []);
+        const map = new Map();
+        [...localCusts, ...custRes].forEach(c => {
+          if (c && (c.phone || c.id)) {
+            const key = c.phone || c.id;
+            if (!map.has(key)) map.set(key, c);
+          }
+        });
+        customers = Array.from(map.values());
         setStorage('windear_crm_customers', customers);
       }
       if (Array.isArray(ordRes) && ordRes.length > 0) {

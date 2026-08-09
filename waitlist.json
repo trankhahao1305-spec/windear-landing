@@ -1,19 +1,37 @@
 [
   {
-    "name": "Trần Khả Hào",
+    "name": "Trần Bình An",
     "phone": "0332255107",
     "zalo": "0332255107",
-    "email": "haotrankha53@gmail.com",
+    "email": "trankhahao1305+test@gmail.com",
     "registered_date": "2026-08-07 14:42:44",
     "goal": "Xem phim, video tiếng Anh không cần sub",
-    "note": "Mình nghe không hiểu"
+    "note": ""
   },
   {
-    "name": "Trần Vương Lâm",
+    "name": "Trần Vương  Lâm",
     "phone": "0984840024",
     "zalo": "0984840024",
     "email": "wanglin654654@gmail.com",
     "registered_date": "2026-08-07 14:45:26",
+    "goal": "Xem phim, video tiếng Anh không cần sub",
+    "note": ""
+  },
+  {
+    "name": "Trần Vương Lâm",
+    "phone": "0984567049",
+    "zalo": "0984567049",
+    "email": "wanglin654654+test@gmail.com",
+    "registered_date": "2026-08-09 15:39:26",
+    "goal": "Xem phim, video tiếng Anh không cần sub",
+    "note": ""
+  },
+  {
+    "name": "Trần Bình An",
+    "phone": "0912345678",
+    "zalo": "0912345678",
+    "email": "trankhahao1305+test@gmail.com",
+    "registered_date": "2026-08-10 00:03:48",
     "goal": "Xem phim, video tiếng Anh không cần sub",
     "note": ""
   }

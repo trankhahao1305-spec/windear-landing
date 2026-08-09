@@ -6,6 +6,8 @@ import sqlite3
 import urllib.parse
 import random
 import time
+import threading
+from email_sender import send_email
 
 PORT = 8000
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
@@ -117,6 +119,155 @@ def init_database():
 
 # Chạy khởi tạo database ngay khi nạp module
 init_database()
+
+def load_email_templates():
+    """
+    Đọc 3 template email từ file email_sequence.md trong thư mục my-brain.
+    """
+    my_brain_dir = os.path.join(os.path.dirname(DIRECTORY), "my-brain")
+    email_sequence_path = os.path.join(my_brain_dir, "email_sequence.md")
+    templates = {"email1": "", "email2": "", "email3": ""}
+    
+    if os.path.exists(email_sequence_path):
+        try:
+            with open(email_sequence_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            # Tách các block ```html ... ```
+            parts = content.split("```html")
+            if len(parts) >= 4:
+                templates["email1"] = parts[1].split("```")[0].strip()
+                templates["email2"] = parts[2].split("```")[0].strip()
+                templates["email3"] = parts[3].split("```")[0].strip()
+                print("✅ Đã load thành công 3 email template từ email_sequence.md")
+        except Exception as e:
+            print(f"⚠️ Lỗi đọc email_sequence.md: {e}. Sử dụng template fallback.")
+            
+    # Mẫu dự phòng nếu không đọc được file
+    if not templates["email1"]:
+        templates["email1"] = "<h2>Chào bạn nha!</h2><p>Cảm ơn bạn đã đăng ký danh sách chờ Windear.</p>"
+    if not templates["email2"]:
+        templates["email2"] = "<h2>Mẹo nè!</h2><p>Luyện nghe tiếng Anh bằng cách chia nhỏ audio.</p>"
+    if not templates["email3"]:
+        templates["email3"] = "<h2>Bắt tay vào hành động thôi!</h2><p>Ebook 4 Bước Luyện Tai chỉ 2.000đ.</p>"
+        
+    return templates
+
+def send_email_sequence_thread(to_email, is_test=False):
+    """
+    Thread chạy ngầm gửi chuỗi 3 email.
+    """
+    try:
+        print(f"🚀 [Email Sequence] Bắt đầu thread gửi email cho: {to_email} (is_test={is_test})")
+        templates = load_email_templates()
+        from_email = "Windear <hello@windear.online>"
+        
+        # 1. Gửi Email 1 chào mừng ngay lập tức
+        print(f"📬 [Email Sequence] Đang gửi Email 1 tới {to_email}...")
+        ok1, res1 = send_email(
+            to_email=to_email,
+            subject="Chào bạn! Cảm ơn bạn đã đăng ký danh sách chờ Windear (Quà tặng bên trong 🎁)",
+            html_content=templates["email1"],
+            from_email=from_email
+        )
+        print(f"👉 Kết quả Email 1: ok={ok1}, res={res1}")
+        
+        if is_test:
+            # Chế độ Test: Gửi ngay lập tức cả Email 2 & Email 3 (cách nhau 3s để hoàn toàn tránh Rate Limit của Resend)
+            time.sleep(3)
+            print(f"📬 [Email Sequence - Test] Đang gửi Email 2 tới {to_email}...")
+            ok2, res2 = send_email(
+                to_email=to_email,
+                subject="Mẹo nè: Tại sao banh lỗ tai ra nghe hoài mà tiếng Anh vẫn trôi tuột? 👂💨",
+                html_content=templates["email2"],
+                from_email=from_email
+            )
+            print(f"👉 [Test Result Email 2] Success={ok2} | Response={res2}")
+
+            time.sleep(3)
+            print(f"📬 [Email Sequence - Test] Đang gửi Email 3 tới {to_email}...")
+            ok3, res3 = send_email(
+                to_email=to_email,
+                subject="Bắt tay vào trị dứt điểm nghe trôi tuột chữ với Ebook 4 Bước Luyện Tai (Chỉ 2.000đ) 📚⚡",
+                html_content=templates["email3"],
+                from_email=from_email
+            )
+            print(f"👉 [Test Result Email 3] Success={ok3} | Response={res3}")
+        else:
+            # Chế độ Thường: Gửi sau 2 ngày và 1 ngày
+            print(f"📬 [Email Sequence] Đã lên lịch gửi Email 2 tới {to_email} sau 2 ngày.")
+            time.sleep(2 * 24 * 3600)
+            print(f"📬 [Email Sequence] Đang gửi Email 2 tới {to_email}...")
+            send_email(
+                to_email=to_email,
+                subject="Mẹo nè: Tại sao banh lỗ tai ra nghe hoài mà tiếng Anh vẫn trôi tuột? 👂💨",
+                html_content=templates["email2"],
+                from_email=from_email
+            )
+            
+            print(f"📬 [Email Sequence] Đã lên lịch gửi Email 3 tới {to_email} sau 1 ngày nữa.")
+            time.sleep(1 * 24 * 3600)
+            print(f"📬 [Email Sequence] Đang gửi Email 3 tới {to_email}...")
+            send_email(
+                to_email=to_email,
+                subject="Bắt tay vào trị dứt điểm nghe trôi tuột chữ với Ebook 4 Bước Luyện Tai (Chỉ 2.000đ) 📚⚡",
+                html_content=templates["email3"],
+                from_email=from_email
+            )
+    except Exception as err:
+        print(f"💥 Lỗi nghiêm trọng trong thread send_email_sequence_thread: {err}")
+
+def send_order_confirmation_email(order_code, customer_name, customer_email, product_name, amount):
+    """
+    Gửi email xác nhận đơn hàng tự động khi tạo đơn hàng mới.
+    """
+    if not customer_email:
+        print(f"⚠️ Không có email khách hàng cho đơn #{order_code}, bỏ qua gửi email xác nhận.")
+        return
+
+    try:
+        amount_val = float(amount)
+        formatted_amount = f"{amount_val:,.0f} VNĐ".replace(",", ".")
+    except Exception:
+        formatted_amount = f"{amount} VNĐ"
+
+    from_email = "Windear <hello@windear.online>"
+    subject = f"Xác nhận đơn hàng #{order_code} — Cảm ơn bạn đã mua hàng tại Windear! 🎉"
+    
+    html_content = f"""
+    <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; line-height: 1.6; color: #1E293B; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #E2E8F0; border-radius: 12px;">
+      <h2 style="color: #06B6D4; margin-top: 0;">Cảm ơn bạn {customer_name} nha! 🎉</h2>
+      <p>Tui từ <strong>Windear</strong> đây. Xác nhận hệ thống đã ghi nhận đơn hàng mới của bạn thành công rồi nhé!</p>
+      
+      <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 15px; margin: 20px 0;">
+        <h4 style="margin-top: 0; color: #0F172A; border-bottom: 1px solid #CBD5E1; padding-bottom: 8px;">📋 CHI TIẾT ĐƠN HÀNG #{order_code}</h4>
+        <p style="margin: 6px 0;"><strong>Sản phẩm:</strong> {product_name}</p>
+        <p style="margin: 6px 0;"><strong>Số tiền:</strong> <span style="color: #FF6B4A; font-weight: bold;">{formatted_amount}</span></p>
+        <p style="margin: 6px 0;"><strong>Mã đơn hàng:</strong> <code style="background: #E2E8F0; padding: 2px 6px; border-radius: 4px;">{order_code}</code></p>
+      </div>
+
+      <h4 style="color: #0F172A;">📦 HƯỚNG DẪN NHẬN HÀNG & TRẢI NGHIỆM:</h4>
+      <ul style="padding-left: 20px;">
+        <li style="margin-bottom: 8px;"><strong>Sản phẩm số / Ebook:</strong> Bạn có thể mở tải file PDF trực tiếp từ trang xác nhận đơn hàng hoặc qua tài liệu đính kèm.</li>
+        <li style="margin-bottom: 8px;"><strong>Khóa Coaching 1-1:</strong> Đội ngũ Windear sẽ nhắn qua Zalo/SĐT để chốt lịch hẹn Zoom trong ít phút nữa.</li>
+        <li style="margin-bottom: 8px;"><strong>Tai nghe Windear:</strong> Đơn hàng sẽ được đóng gói và giao tới bạn trong 2-3 ngày làm việc.</li>
+      </ul>
+
+      <p>Thật ra, đơn giản thôi, chúc bạn sẽ có những phút giây luyện tai siêu hiệu quả và sớm trị dứt điểm chứng nghe trôi chữ cùng Windear!</p>
+      
+      <p style="margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 15px; font-size: 0.9em; color: #64748B;">
+        Thân mến,<br>
+        <strong>Tui từ Windear App</strong>
+      </p>
+    </div>
+    """
+
+    print(f"📬 [Order Email] Đang gửi email xác nhận đơn #{order_code} tới {customer_email}...")
+    threading.Thread(target=send_email, kwargs={
+        "to_email": customer_email,
+        "subject": subject,
+        "html_content": html_content,
+        "from_email": from_email
+    }, daemon=True).start()
 
 class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -235,6 +386,10 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             conn.commit()
             conn.close()
 
+            # Kích hoạt gửi email xác nhận đơn hàng
+            if email:
+                send_order_confirmation_email(rand_code, name, email, prod["name"], amount)
+
             return self._send_json({
                 "order_id": order_id,
                 "order_code": rand_code,
@@ -242,6 +397,106 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
                 "status": "pending",
                 "product_name": prod["name"]
             })
+
+        # API lưu khách hàng đăng ký từ form waitlist
+        elif path == '/api/save-customer':
+            name = body.get('name')
+            phone = body.get('phone')
+            zalo = body.get('zalo', phone)
+            email = body.get('email', '')
+            goal = body.get('goal', '')
+            note = body.get('note', '')
+
+            print(f"📥 [Server API] Nhận đăng ký khách hàng: Name='{name}', Phone='{phone}', Email='{email}'")
+
+            conn = get_db()
+            cur = conn.cursor()
+            try:
+                cur.execute('''
+                    INSERT INTO customers (name, phone, zalo, email, registered_date)
+                    VALUES (?, ?, ?, ?, datetime('now', 'localtime'))
+                    ON CONFLICT(phone) DO UPDATE SET
+                        name=excluded.name,
+                        zalo=excluded.zalo,
+                        email=excluded.email
+                ''', (name, phone, zalo, email))
+                conn.commit()
+            except Exception as e:
+                print(f"Lỗi lưu DB customer: {e}")
+            finally:
+                conn.close()
+
+            # Đồng bộ ghi bổ sung vào waitlist.json
+            waitlist_path = os.path.join(DIRECTORY, "waitlist.json")
+            try:
+                waitlist_data = []
+                if os.path.exists(waitlist_path):
+                    with open(waitlist_path, "r", encoding="utf-8") as f:
+                        waitlist_data = json.load(f)
+                
+                updated = False
+                for w_item in waitlist_data:
+                    if w_item.get("phone") == phone:
+                        w_item["name"] = name
+                        w_item["email"] = email
+                        w_item["zalo"] = zalo
+                        updated = True
+                        break
+                if not updated:
+                    waitlist_data.append({
+                        "name": name,
+                        "phone": phone,
+                        "zalo": zalo,
+                        "email": email,
+                        "goal": goal,
+                        "note": note,
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+                with open(waitlist_path, "w", encoding="utf-8") as f:
+                    json.dump(waitlist_data, f, ensure_ascii=False, indent=2)
+                print("✅ [Server] Đã đồng bộ khách hàng mới vào waitlist.json")
+            except Exception as w_err:
+                print(f"⚠️ Lỗi ghi waitlist.json: {w_err}")
+
+            # Cập nhật file waitlist.json để đồng bộ dữ liệu
+            try:
+                waitlist_data = []
+                if os.path.exists(WAITLIST_PATH):
+                    with open(WAITLIST_PATH, 'r', encoding='utf-8') as f:
+                        waitlist_data = json.load(f)
+                
+                # Check xem đã có số điện thoại này chưa để cập nhật thông tin mới nhất
+                exists = False
+                for item in waitlist_data:
+                    if item.get("phone") == phone:
+                        item["name"] = name
+                        item["email"] = email
+                        item["zalo"] = zalo
+                        item["goal"] = goal
+                        item["note"] = note
+                        exists = True
+                        break
+                if not exists:
+                    waitlist_data.append({
+                        "name": name,
+                        "phone": phone,
+                        "zalo": zalo,
+                        "email": email,
+                        "registered_date": time.strftime('%Y-%m-%d %H:%M:%S'),
+                        "goal": goal,
+                        "note": note
+                    })
+                with open(WAITLIST_PATH, 'w', encoding='utf-8') as f:
+                    json.dump(waitlist_data, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                print(f"Lỗi cập nhật waitlist.json: {e}")
+
+            # Kích hoạt gửi email sequence tự động qua Resend
+            if email:
+                is_test = "+test" in email.lower()
+                threading.Thread(target=send_email_sequence_thread, args=(email, is_test), daemon=True).start()
+
+            return self._send_json({"success": True})
 
         # 2. SePay Webhook nhận thanh toán tự động
         elif path == '/api/sepay-webhook':
@@ -352,6 +607,11 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
 
             conn.commit()
             conn.close()
+
+            # Kích hoạt gửi email xác nhận đơn hàng khi Admin tạo đơn
+            if cust and dict(cust).get("email"):
+                send_order_confirmation_email(rand_code, cust["name"], cust["email"], prod["name"] if prod else "", amount)
+
             return self._send_json({"success": True})
 
         return self._send_json({"error": "Not Found"}, 404)

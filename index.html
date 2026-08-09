@@ -509,7 +509,7 @@
           <span>Điền thông tin bên dưới để nhận 1 Tháng Pro VIP + Ebook Luyện Tai Miễn Phí</span>
         </div>
 
-        <form id="native-customer-form" class="native-customer-form" onsubmit="handleNativeFormSubmit(event)">
+        <form id="native-customer-form" class="native-customer-form">
           <input type="hidden" name="form-name" value="customer-waitlist" />
           
           <div class="form-group">
@@ -542,7 +542,7 @@
             <textarea id="cust-note" name="note" rows="2" placeholder="Ví dụ: Mình rất hay bị nghe trôi chữ khi nghe giọng Anh-Úc..."></textarea>
           </div>
 
-          <button type="submit" class="btn btn-accent btn-large btn-submit-form" id="btn-native-submit">
+          <button type="button" onclick="submitWaitlistFormDirect()" class="btn btn-accent btn-large btn-submit-form" id="btn-native-submit">
             <span>🚀 Đăng ký Waitlist & Nhận Quà Ngay</span>
           </button>
         </form>
@@ -733,14 +733,18 @@
       }, 300);
     };
 
-    // Native Customer Form Submission Handler (Prevents HTTP 405)
-    window.handleNativeFormSubmit = function(e) {
-      if (e && e.preventDefault) e.preventDefault();
+    // Direct Waitlist Button OnClick Handler
+    window.submitWaitlistFormDirect = async function() {
       var name = (document.getElementById('cust-name') || {}).value || '';
       var email = (document.getElementById('cust-email') || {}).value || '';
       var phone = (document.getElementById('cust-phone') || {}).value || '';
       var goal = (document.getElementById('cust-goal') || {}).value || '';
       var note = (document.getElementById('cust-note') || {}).value || '';
+
+      if (!name || !email || !phone) {
+        alert('Vui lòng điền đầy đủ Họ tên, Email và Số điện thoại!');
+        return;
+      }
 
       var entry = {
         name: name,
@@ -751,11 +755,39 @@
         timestamp: new Date().toLocaleString('vi-VN')
       };
 
+      console.log('🚀 [Direct Submit] Gửi dữ liệu tới /api/save-customer:', entry);
+
+      // Lưu khách hàng mới vào localStorage windear_crm_customers để Admin hiển thị tức thì trên Vercel/Live
       try {
-        var saved = JSON.parse(localStorage.getItem('windear_customers_data') || '[]');
-        saved.push(entry);
-        localStorage.setItem('windear_customers_data', JSON.stringify(saved));
+        var crmCusts = JSON.parse(localStorage.getItem('windear_crm_customers') || '[]');
+        var idx = crmCusts.findIndex(function(c) { return c.phone === phone; });
+        if (idx >= 0) {
+          crmCusts[idx].email = email;
+          crmCusts[idx].name = name;
+        } else {
+          crmCusts.unshift({
+            id: Date.now(),
+            name: name,
+            phone: phone,
+            zalo: phone,
+            email: email,
+            registered_date: new Date().toLocaleString('vi-VN')
+          });
+        }
+        localStorage.setItem('windear_crm_customers', JSON.stringify(crmCusts));
       } catch(err) {}
+
+      try {
+        var res = await fetch('/api/save-customer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(entry)
+        });
+        var data = await res.json();
+        console.log('✅ [Direct Submit] Server phản hồi thành công:', data);
+      } catch(err) {
+        console.error('❌ [Direct Submit] Lỗi gửi:', err);
+      }
 
       // Switch view to Thank You Screen instantly
       var formView = document.getElementById('modal-form-view');
@@ -763,14 +795,11 @@
       if (formView) formView.style.display = 'none';
       if (thankYouView) thankYouView.style.display = 'flex';
 
-      // Also send to local backend if running locally
+      // Notify Admin UI
       try {
-        fetch('/api/save-customer', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(entry)
-        }).catch(function(err) {});
-      } catch(err) {}
+        const bc = new BroadcastChannel('windear_crm_channel');
+        bc.postMessage({ type: 'CUSTOMERS_UPDATED' });
+      } catch(e) {}
     };
   </script>
   <script src="/main.js"></script>

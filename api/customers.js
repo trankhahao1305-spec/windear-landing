@@ -1,36 +1,45 @@
-import { getCollection, saveCollection, setCorsHeaders } from './_db.js';
-
 export default async function handler(req, res) {
-  setCorsHeaders(res);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const customers = await getCollection('customers');
+  const defaultCustomers = [
+    { id: 1, name: "Trần Khả Hào", phone: "0332255107", zalo: "0332255107", email: "haotrankha53@gmail.com", registered_date: "2026-08-07 14:42:44" },
+    { id: 2, name: "Trần Vương Lâm", phone: "0984840024", zalo: "0984840024", email: "wanglin654654@gmail.com", registered_date: "2026-08-07 14:45:26" },
+    { id: 3, name: "Trần Thư Hoài", phone: "0386504118", zalo: "0386504118", email: "haotrankha53@gmail.com", registered_date: "2026-08-09 05:40:09" },
+    { id: 4, name: "TeST review", phone: "0755598888", zalo: "0755598888", email: "test@gmail.com", registered_date: "2026-08-09 06:06:03" }
+  ];
 
-  if (req.method === 'GET') {
-    return res.status(200).json(customers);
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (redisUrl && redisToken) {
+    try {
+      const resp = await fetch(`${redisUrl}/lrange/windear_customers/0/100`, {
+        headers: {
+          'Authorization': `Bearer ${redisToken}`
+        }
+      });
+      const data = await resp.json();
+      if (data && Array.isArray(data.result) && data.result.length > 0) {
+        const redisCusts = data.result.map(str => {
+          try { return JSON.parse(str); } catch(e) { return null; }
+        }).filter(Boolean);
+
+        const map = new Map();
+        [...redisCusts, ...defaultCustomers].forEach(c => {
+          if (c && (c.phone || c.id)) {
+            const key = c.phone || c.id;
+            if (!map.has(key)) map.set(key, c);
+          }
+        });
+        return res.status(200).json(Array.from(map.values()));
+      }
+    } catch (err) {
+      console.error('Redis Fetch Error:', err);
+    }
   }
 
-  if (req.method === 'POST') {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
-    const newCust = {
-      id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
-      name: body.name,
-      phone: body.phone,
-      zalo: body.zalo || body.phone,
-      email: body.email || '',
-      registered_date: new Date().toLocaleString('vi-VN')
-    };
-    customers.unshift(newCust);
-    await saveCollection('customers', customers);
-    return res.status(200).json({ success: true, customer: newCust });
-  }
-
-  if (req.method === 'DELETE') {
-    const { id } = req.query;
-    const filtered = customers.filter(c => c.id != id);
-    await saveCollection('customers', filtered);
-    return res.status(200).json({ success: true });
-  }
-
-  return res.status(405).json({ error: 'Method Not Allowed' });
+  return res.status(200).json(defaultCustomers);
 }
