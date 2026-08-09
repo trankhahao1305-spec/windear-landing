@@ -4,7 +4,7 @@
 
 import { getCollection, saveCollection, setCorsHeaders } from './_db.js';
 
-const BUCKET = 'https://kvdb.io/A8v8Qz6D5xQzY7wB2yJ4tK';
+const BUCKET = 'https://kvdb.io/KbhWWTu8pkqGHFCjXh6LR5';
 
 export default async function handler(req, res) {
   setCorsHeaders(res);

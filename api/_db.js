@@ -2,7 +2,7 @@
 // kvdb.io: GET to read, PUT to write (NOT POST)
 // Falls back to in-memory if cloud unavailable (dev only)
 
-const BUCKET = 'https://kvdb.io/A8v8Qz6D5xQzY7wB2yJ4tK';
+const BUCKET = 'https://kvdb.io/KbhWWTu8pkqGHFCjXh6LR5';
 
 const DEFAULT_PRODUCTS = [
   { id: 1, name: "Sổ Tay 100 Cụm Từ Nối Âm & Nuốt Âm Hollywood", type: "digital", price: 2000, description: "Cẩm nang PDF giải mã 100 cụm từ nuốt âm hay gặp nhất trong phim", stock: null },
