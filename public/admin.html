@@ -296,18 +296,12 @@
   ];
 
   const defaultOrders = [
-    { id: 1, customer_id: 1, product_id: 1, product_name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", customer_name: "Trần Khả Hào", customer_phone: "0332255107", amount: 2000, status: "pending", order_code: "WD1001", created_at: "2026-08-08 23:55:00" }
+    { id: 1, customer_id: 1, product_id: 1, product_name: "Sổ Tay 100 Cụm Từ Nối Âm & Nuốt Âm Hollywood", customer_name: "Trần Khả Hào", customer_phone: "0332255107", amount: 2000, status: "pending", order_code: "WD1001", created_at: "2026-08-08 23:55:00" }
   ];
 
-  let products = JSON.parse(localStorage.getItem('windear_crm_products')) || defaultProducts;
-  let customers = JSON.parse(localStorage.getItem('windear_crm_customers')) || defaultCustomers;
-  let orders = JSON.parse(localStorage.getItem('windear_crm_orders')) || defaultOrders;
-
-  function syncStorage() {
-    localStorage.setItem('windear_crm_products', JSON.stringify(products));
-    localStorage.setItem('windear_crm_customers', JSON.stringify(customers));
-    localStorage.setItem('windear_crm_orders', JSON.stringify(orders));
-  }
+  let products = defaultProducts;
+  let customers = defaultCustomers;
+  let orders = defaultOrders;
 
   function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -345,15 +339,16 @@
         fetch('/api/orders').then(r => r.ok ? r.json() : null)
       ]);
 
-      if (pRes && pRes.length) products = pRes;
-      if (cRes && cRes.length) customers = cRes;
-      if (oRes && oRes.length) orders = oRes;
-    } catch(e) {}
+      if (pRes && Array.isArray(pRes) && pRes.length) products = pRes;
+      if (cRes && Array.isArray(cRes) && cRes.length) customers = cRes;
+      if (oRes && Array.isArray(oRes) && oRes.length) orders = oRes;
+    } catch(e) {
+      console.warn('Load API error, using cache:', e);
+    }
 
     renderProducts();
     renderCustomers();
     renderOrders();
-    syncStorage();
 
     document.getElementById('count-products').innerText = products.length;
     document.getElementById('count-customers').innerText = customers.length;
@@ -455,7 +450,6 @@
   async function saveProduct(e) {
     e.preventDefault();
     const data = {
-      id: products.length ? Math.max(...products.map(p => p.id)) + 1 : 1,
       name: document.getElementById('prod-name').value,
       type: document.getElementById('prod-type').value,
       price: parseFloat(document.getElementById('prod-price').value),
@@ -471,8 +465,6 @@
       });
     } catch(err) {}
 
-    products.push(data);
-    syncStorage();
     closeModal('productModal');
     loadData();
   }
@@ -480,12 +472,10 @@
   async function saveCustomer(e) {
     e.preventDefault();
     const data = {
-      id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
       name: document.getElementById('cust-name').value,
       phone: document.getElementById('cust-phone').value,
       zalo: document.getElementById('cust-zalo').value,
-      email: document.getElementById('cust-email').value,
-      registered_date: new Date().toLocaleString('vi-VN')
+      email: document.getElementById('cust-email').value
     };
 
     try {
@@ -496,8 +486,6 @@
       });
     } catch(err) {}
 
-    customers.push(data);
-    syncStorage();
     closeModal('customerModal');
     loadData();
   }
@@ -509,46 +497,19 @@
     const amount = parseFloat(document.getElementById('ord-amount').value);
     const status = document.getElementById('ord-status').value;
 
-    const cust = customers.find(c => c.id === custId) || { name: 'Khách hàng', phone: '' };
-    const prod = products.find(p => p.id === prodId) || { name: 'Sản phẩm', type: 'digital' };
-
-    const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
-
-    const orderData = {
-      id: orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1,
-      customer_id: custId,
-      product_id: prodId,
-      product_name: prod.name,
-      customer_name: cust.name,
-      customer_phone: cust.phone,
-      amount: amount,
-      status: status,
-      order_code: randCode,
-      created_at: new Date().toLocaleString('vi-VN')
-    };
-
-    // Logic Tồn kho
-    if (prod.type === 'physical') {
-      prod.stock = Math.max(0, (prod.stock || 0) - 1);
-      console.log('📦 Trừ tồn kho vật lý:', prod.name, 'còn', prod.stock);
-    }
-
     try {
       await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify({ customer_id: custId, product_id: prodId, amount, status })
       });
     } catch(err) {}
 
-    orders.unshift(orderData);
-    syncStorage();
     closeModal('orderModal');
     loadData();
   }
 
   async function triggerManualSuccess(orderCode) {
-    if (!confirm('Bạn có chắc muốn kích hoạt trạng thái SUCCESS cho đơn hàng ' + orderCode + '?')) return;
     try {
       await fetch('/api/manual-success-order', {
         method: 'POST',
@@ -559,7 +520,6 @@
 
     const ord = orders.find(o => o.order_code === orderCode || o.id == orderCode);
     if (ord) ord.status = 'success';
-    syncStorage();
     loadData();
   }
 
@@ -568,15 +528,12 @@
     try {
       await fetch(`/api/${table}?id=${id}`, { method: 'DELETE' });
     } catch(err) {}
-
-    if (table === 'products') products = products.filter(p => p.id !== id);
-    if (table === 'customers') customers = customers.filter(c => c.id !== id);
-    if (table === 'orders') orders = orders.filter(o => o.id !== id);
-    syncStorage();
     loadData();
   }
 
+  // Tải dữ liệu ban đầu và tự động làm mới mỗi 3 giây
   loadData();
+  setInterval(loadData, 3000);
 </script>
 
 </body>

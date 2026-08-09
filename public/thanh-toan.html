@@ -98,7 +98,7 @@
       </button>
 
       <div class="nav-links">
-        <a href="/" target="_blank">🌐 Quay lại Trang Chủ Windear</a>
+        <a href="/">🌐 Quay lại Trang Chủ Windear</a>
       </div>
     </form>
   </div>
@@ -159,15 +159,15 @@
 
 <script>
   const defaultProducts = [
-    { id: 1, name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", type: "digital", price: 2000, description: "Ebook PDF hướng dẫn 4 bước luyện tai tiếng Anh chuyên sâu", stock: null },
-    { id: 2, name: "Template Flashcard 4 Giọng Bản Xứ", type: "digital", price: 2000, description: "Template Anki / Notion luyện phản xạ nghe", stock: null },
+    { id: 1, name: "Sổ Tay 100 Cụm Từ Nối Âm & Nuốt Âm Hollywood", type: "digital", price: 2000, description: "Cẩm nang PDF giải mã 100 cụm từ nuốt âm hay gặp nhất trong phim", stock: null },
+    { id: 2, name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", type: "digital", price: 2000, description: "Ebook PDF hướng dẫn 4 bước luyện tai tiếng Anh chuyên sâu", stock: null },
     { id: 3, name: "Khóa Coaching 1-1 Luyện Tai 7 Ngày", type: "service", price: 199000, description: "Kèm 1-1 qua Zoom sửa phát âm & phản xạ nghe", stock: null },
     { id: 4, name: "Tai Nghe Monitor Chuyên Luyện Nghe Windear", type: "physical", price: 350000, description: "Tai nghe có dây kiểm âm lọc tạp âm", stock: 10 }
   ];
 
   let currentOrderCode = '';
   let pollInterval = null;
-  let productsList = JSON.parse(localStorage.getItem('windear_crm_products')) || defaultProducts;
+  let productsList = defaultProducts;
 
   function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -210,10 +210,26 @@
     const email = document.getElementById('co-email').value;
 
     const prod = productsList.find(p => p.id === productId) || productsList[0];
-    const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+    let randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+
+    // Call shared Backend API
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: prod.id, name, phone, email })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.order_code) randCode = data.order_code;
+      }
+    } catch(err) {
+      console.warn('Backend offline fallback:', err);
+    }
+
     currentOrderCode = randCode;
 
-    // Lưu vào database / localStorage để admin panel nhìn thấy trạng thái pending
+    // Sync localStorage as well
     const newOrder = {
       id: Date.now(),
       customer_id: Date.now(),
@@ -226,21 +242,11 @@
       order_code: randCode,
       created_at: new Date().toLocaleString('vi-VN')
     };
-
-    try {
-      await fetch('/api/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: prod.id, name, phone, email })
-      });
-    } catch(err) {}
-
-    // Đồng bộ localStorage
     let savedOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
     savedOrders.unshift(newOrder);
     localStorage.setItem('windear_crm_orders', JSON.stringify(savedOrders));
 
-    // Cập nhật giao diện QR SePay
+    // Update QR UI
     document.getElementById('step-form').style.display = 'none';
     document.getElementById('step-qr').style.display = 'block';
 
@@ -249,26 +255,26 @@
     document.getElementById('qr-amount-text').innerText = formatMoney(prod.price);
     document.getElementById('qr-code-text').innerText = randCode;
 
-    // Lắng nghe trạng thái thành công
+    // Start Polling for Success
     startPolling(randCode);
   }
 
   function startPolling(orderCode) {
     if (pollInterval) clearInterval(pollInterval);
     pollInterval = setInterval(async () => {
-      // 1. Kiểm tra qua Backend
+      // 1. Kiểm tra qua Backend API
       try {
         const res = await fetch(`/api/check-order-status?order_code=${orderCode}`);
         if (res.ok) {
           const data = await res.json();
-          if (data.status === 'success') {
+          if (data && data.status === 'success') {
             showSuccess();
             return;
           }
         }
       } catch(e) {}
 
-      // 2. Kiểm tra qua LocalStorage (khi kích hoạt từ tab Admin)
+      // 2. Kiểm tra qua LocalStorage (nếu mở cùng trình duyệt)
       const localOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
       const found = localOrders.find(o => o.order_code === orderCode);
       if (found && found.status === 'success') {
@@ -278,6 +284,12 @@
   }
 
   function testQuickSuccess() {
+    fetch('/api/manual-success-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_code: currentOrderCode })
+    }).catch(() => {});
+
     const localOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
     const found = localOrders.find(o => o.order_code === currentOrderCode);
     if (found) found.status = 'success';
