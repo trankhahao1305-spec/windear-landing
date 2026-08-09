@@ -122,21 +122,29 @@ export default async function handler(req, res) {
       registered_date: new Date().toLocaleString('vi-VN')
     };
 
-    // Upstash REST API POST Array command
-    const redisUrl = process.env.UPSTASH_REDIS_REST_URL || 'https://suited-marmot-48766.upstash.io';
-    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
+    // Đồng bộ vào Cloud Database 24/7 cho mọi thiết bị
+    try {
+      const resp = await fetch('https://kv.val.town/v1/windear_customers');
+      let cloudCusts = [];
+      if (resp.ok) {
+        cloudCusts = await resp.json();
+      }
+      if (!Array.isArray(cloudCusts)) cloudCusts = [];
+      
+      const idx = cloudCusts.findIndex(c => c && (c.phone === phone || c.email === email));
+      if (idx >= 0) {
+        cloudCusts[idx] = newCustomer;
+      } else {
+        cloudCusts.unshift(newCustomer);
+      }
 
-    if (redisUrl && redisToken) {
-      try {
-        await fetch(redisUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${redisToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(["LPUSH", "windear_customers", JSON.stringify(newCustomer)])
-        });
-      } catch(e) {}
+      await fetch('https://kv.val.town/v1/windear_customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cloudCusts)
+      });
+    } catch (err) {
+      console.error('Cloud KV Error:', err);
     }
 
     return res.status(200).json({

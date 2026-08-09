@@ -11,37 +11,23 @@ export default async function handler(req, res) {
     { id: 4, name: "TeST review", phone: "0755598888", zalo: "0755598888", email: "test@gmail.com", registered_date: "2026-08-09 06:06:03" }
   ];
 
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || 'https://suited-marmot-48766.upstash.io';
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
-
-  if (redisUrl && redisToken) {
-    try {
-      const resp = await fetch(redisUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${redisToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(["LRANGE", "windear_customers", "0", "100"])
-      });
-      const data = await resp.json();
-      if (data && Array.isArray(data.result) && data.result.length > 0) {
-        const redisCusts = data.result.map(str => {
-          try { return JSON.parse(str); } catch(e) { return null; }
-        }).filter(Boolean);
-
+  try {
+    const resp = await fetch('https://kv.val.town/v1/windear_customers');
+    if (resp.ok) {
+      const cloudCusts = await resp.json();
+      if (Array.isArray(cloudCusts) && cloudCusts.length > 0) {
         const map = new Map();
-        [...redisCusts, ...defaultCustomers].forEach(c => {
-          if (c && (c.phone || c.id)) {
-            const key = c.phone || c.id;
+        [...cloudCusts, ...defaultCustomers].forEach(c => {
+          if (c && (c.phone || c.id || c.email)) {
+            const key = c.phone || c.email || c.id;
             if (!map.has(key)) map.set(key, c);
           }
         });
         return res.status(200).json(Array.from(map.values()));
       }
-    } catch (err) {
-      console.error('Redis Fetch Error:', err);
     }
+  } catch (err) {
+    console.error('Cloud Fetch Error:', err);
   }
 
   return res.status(200).json(defaultCustomers);

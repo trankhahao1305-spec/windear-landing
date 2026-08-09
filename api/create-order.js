@@ -32,9 +32,26 @@ export default async function handler(req, res) {
       customers.unshift(cust);
     } else {
       if (name) cust.name = name;
-      if (email) cust.email = email;
-    }
     await saveCollection('customers', customers);
+
+    // Sync to Cloud KV Store for cross-device CRM updates
+    try {
+      const resp = await fetch('https://kv.val.town/v1/windear_customers');
+      let cloudCusts = [];
+      if (resp.ok) cloudCusts = await resp.json();
+      if (!Array.isArray(cloudCusts)) cloudCusts = [];
+      const idx = cloudCusts.findIndex(c => c && (c.phone === phone || (email && c.email === email)));
+      if (idx >= 0) {
+        cloudCusts[idx] = cust;
+      } else {
+        cloudCusts.unshift(cust);
+      }
+      await fetch('https://kv.val.town/v1/windear_customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cloudCusts)
+      });
+    } catch(e) {}
 
     const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
     const amount = prod.price || 2000;
