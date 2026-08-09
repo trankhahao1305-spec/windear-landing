@@ -158,8 +158,6 @@
 </div>
 
 <script>
-  const CLOUD_API = 'https://kvdb.io/A8v8Qz6D5xQzY7wB2yJ4tK';
-
   const defaultProducts = [
     { id: 1, name: "Sổ Tay 100 Cụm Từ Nối Âm & Nuốt Âm Hollywood", type: "digital", price: 2000, description: "Cẩm nang PDF giải mã 100 cụm từ nuốt âm hay gặp nhất trong phim", stock: null },
     { id: 2, name: "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ", type: "digital", price: 2000, description: "Ebook PDF hướng dẫn 4 bước luyện tai tiếng Anh chuyên sâu", stock: null },
@@ -169,24 +167,30 @@
 
   let currentOrderCode = '';
   let pollInterval = null;
-  let productsList = JSON.parse(localStorage.getItem('windear_crm_products') || 'null') || defaultProducts;
+
+  function getStorage(key, defaultVal) {
+    try {
+      const data = localStorage.getItem(key);
+      return data ? JSON.parse(data) : defaultVal;
+    } catch(e) {
+      return defaultVal;
+    }
+  }
+
+  function setStorage(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch(e) {}
+  }
+
+  let productsList = getStorage('windear_crm_products', defaultProducts);
 
   function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   }
 
-  async function loadProducts() {
-    try {
-      const res = await fetch(`${CLOUD_API}/products`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data && Array.isArray(data) && data.length) {
-          productsList = data;
-          localStorage.setItem('windear_crm_products', JSON.stringify(data));
-        }
-      }
-    } catch (e) {}
-
+  function loadProducts() {
+    productsList = getStorage('windear_crm_products', defaultProducts);
     const select = document.getElementById('co-product');
     select.innerHTML = productsList.map(p => `
       <option value="${p.id}" data-price="${p.price}">${p.name} — ${formatMoney(p.price)}</option>
@@ -203,7 +207,7 @@
     }
   }
 
-  async function handleCheckout(e) {
+  function handleCheckout(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
     btn.disabled = true;
@@ -218,9 +222,26 @@
     const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
     currentOrderCode = randCode;
 
+    // 1. Tạo và lưu khách hàng nếu mới
+    let customers = getStorage('windear_crm_customers', []);
+    let cust = customers.find(c => c.phone === phone);
+    if (!cust) {
+      cust = {
+        id: Date.now(),
+        name: name,
+        phone: phone,
+        zalo: phone,
+        email: email,
+        registered_date: new Date().toLocaleString('vi-VN')
+      };
+      customers.unshift(cust);
+      setStorage('windear_crm_customers', customers);
+    }
+
+    // 2. Tạo đơn hàng mới
     const newOrder = {
       id: Date.now(),
-      customer_id: Date.now(),
+      customer_id: cust.id,
       product_id: prod.id,
       product_name: prod.name,
       customer_name: name,
@@ -231,33 +252,23 @@
       created_at: new Date().toLocaleString('vi-VN')
     };
 
-    // 1. Lưu ngay vào LocalStorage
-    let savedOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
+    // 3. Trừ kho nếu là sản phẩm vật lý
+    if (prod.type === 'physical') {
+      prod.stock = Math.max(0, (prod.stock || 0) - 1);
+      setStorage('windear_crm_products', productsList);
+    }
+
+    // 4. Lưu đơn hàng vào LocalStorage
+    let savedOrders = getStorage('windear_crm_orders', []);
     savedOrders = savedOrders.filter(o => o.order_code !== randCode);
     savedOrders.unshift(newOrder);
-    localStorage.setItem('windear_crm_orders', JSON.stringify(savedOrders));
+    setStorage('windear_crm_orders', savedOrders);
 
-    // 2. Gửi BroadcastChannel tức thì sang tab Admin
+    // 5. Bắn BroadcastChannel tức thì sang tab Admin
     try {
       const bc = new BroadcastChannel('windear_crm_channel');
       bc.postMessage({ type: 'NEW_ORDER', order: newOrder });
     } catch(e) {}
-
-    // 3. Đẩy lên Cloud KV cho các thiết bị khác
-    try {
-      await fetch(`${CLOUD_API}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(savedOrders)
-      });
-    } catch(err) {}
-
-    // 4. Serverless API background
-    fetch('/api/create-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product_id: prod.id, name, phone, email })
-    }).catch(() => {});
 
     // Cập nhật giao diện QR
     document.getElementById('step-form').style.display = 'none';
@@ -274,28 +285,13 @@
 
   function startPolling(orderCode) {
     if (pollInterval) clearInterval(pollInterval);
-    pollInterval = setInterval(async () => {
-      // 1. Kiểm tra LocalStorage
-      const localOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
+    pollInterval = setInterval(() => {
+      const localOrders = getStorage('windear_crm_orders', []);
       const foundLocal = localOrders.find(o => o.order_code === orderCode);
       if (foundLocal && foundLocal.status === 'success') {
         showSuccess();
-        return;
       }
-
-      // 2. Kiểm tra Cloud KV
-      try {
-        const res = await fetch(`${CLOUD_API}/orders`);
-        if (res.ok) {
-          const orders = await res.json();
-          const found = orders.find(o => o.order_code === orderCode || o.id == orderCode);
-          if (found && found.status === 'success') {
-            showSuccess();
-            return;
-          }
-        }
-      } catch(e) {}
-    }, 1500);
+    }, 1000);
   }
 
   // Lắng nghe BroadcastChannel từ tab Admin khi bấm kích hoạt
@@ -308,18 +304,23 @@
     };
   } catch(e) {}
 
-  async function testQuickSuccess() {
-    const localOrders = JSON.parse(localStorage.getItem('windear_crm_orders') || '[]');
+  window.addEventListener('storage', () => {
+    const localOrders = getStorage('windear_crm_orders', []);
+    const foundLocal = localOrders.find(o => o.order_code === currentOrderCode);
+    if (foundLocal && foundLocal.status === 'success') {
+      showSuccess();
+    }
+  });
+
+  function testQuickSuccess() {
+    const localOrders = getStorage('windear_crm_orders', []);
     const found = localOrders.find(o => o.order_code === currentOrderCode);
     if (found) found.status = 'success';
-    localStorage.setItem('windear_crm_orders', JSON.stringify(localOrders));
+    setStorage('windear_crm_orders', localOrders);
 
     try {
-      await fetch(`${CLOUD_API}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(localOrders)
-      });
+      const bc = new BroadcastChannel('windear_crm_channel');
+      bc.postMessage({ type: 'ORDER_ACTIVATED', order_code: currentOrderCode });
     } catch(e) {}
 
     showSuccess();
