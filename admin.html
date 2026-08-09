@@ -397,6 +397,19 @@
     const bc = new BroadcastChannel('windear_crm_channel');
     bc.onmessage = function(ev) {
       console.log('🔄 CRM nhận tín hiệu cập nhật mới:', ev.data);
+      if (ev.data && ev.data.customer) {
+        const c = ev.data.customer;
+        const deletedIds = getStorage('windear_crm_deleted_customers', []).map(String);
+        if (!deletedIds.includes(String(c.id))) {
+          const idx = customers.findIndex(x => String(x.phone) === String(c.phone) || (c.email && String(x.email) === String(c.email)));
+          if (idx >= 0) customers[idx] = c;
+          else customers.unshift(c);
+          
+          setStorage('windear_crm_customers', customers);
+          renderCustomers();
+          document.getElementById('count-customers').innerText = customers.length;
+        }
+      }
       loadData();
     };
   } catch(e) {}
