@@ -122,16 +122,19 @@ export default async function handler(req, res) {
       registered_date: new Date().toLocaleString('vi-VN')
     };
 
-    // Upstash Direct REST API LPUSH URL (100% Reliable, zero headers required)
-    const upstashToken = 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
-    const upstashBase = 'https://suited-marmot-48766.upstash.io';
-    
+    // Standard Upstash Redis REST POST Call
     try {
-      const pushUrl = `${upstashBase}/lpush/windear_customers_list/${encodeURIComponent(JSON.stringify(newCustomer))}?_token=${upstashToken}`;
-      await fetch(pushUrl);
-      console.log('✅ Directly pushed customer to Upstash Cloud Database!');
+      await fetch('https://suited-marmot-48766.upstash.io/lpush/windear_customers_list', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(JSON.stringify(newCustomer))
+      });
+      console.log('✅ Standard Upstash Redis POST push success!');
     } catch (err) {
-      console.error('Upstash Direct Push Error:', err);
+      console.error('Upstash POST push error:', err);
     }
 
     return res.status(200).json({
