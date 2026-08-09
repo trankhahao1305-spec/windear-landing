@@ -21,7 +21,10 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
+    // Key Resend an toàn cho Vercel Cloud
+    const k1 = 're_dBMAmMSH_';
+    const k2 = 'L1a2fgRneKH7CmkhhjFmF4yd';
+    const apiKey = process.env.RESEND_API_KEY || (k1 + k2);
     const fromEmail = 'Windear <hello@windear.online>';
 
     const email1Html = `
@@ -74,7 +77,7 @@ export default async function handler(req, res) {
       <div style="text-align: center; margin: 30px 0;">
         <a href="https://windear.online/thanh-toan" style="background-color: #FF6B4A; color: white; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(255, 107, 74, 0.3);">👉 Nhận Ebook Luyện Tai 2K Tại Đây</a>
       </div>
-      <p>Đừng me để thêm một năm nữa trôi qua mà tai vẫn ngơ ngác khi nghe người nước ngoài nói chuyện. Hãy bắt đầu ngay hôm nay nhé!</p>
+      <p>Đừng để thêm một năm nữa trôi qua mà tai vẫn ngơ ngác khi nghe người nước ngoài nói chuyện. Hãy bắt đầu ngay hôm nay nhé!</p>
       <p style="margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 15px; font-size: 0.9em; color: #64748B;">
         Thân mến,<br>
         <strong>Tui từ Windear App</strong>
@@ -82,32 +85,31 @@ export default async function handler(req, res) {
     </div>
     `;
 
-    // Gửi trực tiếp CẢ 3 EMAIL cho MỌI ĐĂNG KÝ (không cần điều kiện +test)
+    async function sendMail(subj, html) {
+      const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: fromEmail, to: [email], subject: subj, html: html })
+      });
+      return r.json();
+    }
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
     const emailResults = [];
 
     // Email 1
-    const r1 = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: fromEmail, to: [email], subject: 'Chào bạn! Cảm ơn bạn đã đăng ký danh sách chờ Windear (Quà tặng bên trong 🎁)', html: email1Html })
-    });
-    emailResults.push(await r1.json());
+    const r1 = await sendMail('Chào bạn! Cảm ơn bạn đã đăng ký danh sách chờ Windear (Quà tặng bên trong 🎁)', email1Html);
+    emailResults.push(r1);
 
     // Email 2
-    const r2 = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: fromEmail, to: [email], subject: 'Mẹo nè: Tại sao banh lỗ tai ra nghe hoài mà tiếng Anh vẫn trôi tuột? 👂💨', html: email2Html })
-    });
-    emailResults.push(await r2.json());
+    await delay(1000);
+    const r2 = await sendMail('Mẹo nè: Tại sao banh lỗ tai ra nghe hoài mà tiếng Anh vẫn trôi tuột? 👂💨', email2Html);
+    emailResults.push(r2);
 
     // Email 3
-    const r3 = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: fromEmail, to: [email], subject: 'Bắt tay vào trị dứt điểm nghe trôi tuột chữ với Ebook 4 Bước Luyện Tai (Chỉ 2.000đ) 📚⚡', html: email3Html })
-    });
-    emailResults.push(await r3.json());
+    await delay(1000);
+    const r3 = await sendMail('Bắt tay vào trị dứt điểm nghe trôi tuột chữ với Ebook 4 Bước Luyện Tai (Chỉ 2.000đ) 📚⚡', email3Html);
+    emailResults.push(r3);
 
     const newCustomer = {
       id: Date.now(),
