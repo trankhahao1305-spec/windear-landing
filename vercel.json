@@ -2,6 +2,11 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/api/save-customer", "destination": "/api/save-customer.js" },
+    { "source": "/api/customers", "destination": "/api/customers.js" },
+    { "source": "/api/create-order", "destination": "/api/create-order.js" },
+    { "source": "/api/orders", "destination": "/api/orders.js" },
+    { "source": "/api/products", "destination": "/api/products.js" },
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/thanh-toan", "destination": "/thanh-toan.html" },
     { "source": "/checkout", "destination": "/thanh-toan.html" }
