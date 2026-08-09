@@ -29,9 +29,12 @@ export default async function handler(req, res) {
         email: email || '',
         registered_date: new Date().toLocaleString('vi-VN')
       };
-      customers.push(cust);
-      await saveCollection('customers', customers);
+      customers.unshift(cust);
+    } else {
+      if (name) cust.name = name;
+      if (email) cust.email = email;
     }
+    await saveCollection('customers', customers);
 
     const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
     const amount = prod.price || 2000;

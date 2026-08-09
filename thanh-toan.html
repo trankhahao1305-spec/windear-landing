@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Thanh Toán Tự Động Qua SePay — Windear App</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,112 +41,117 @@
     /* QR View */
     .qr-container { text-align: center; display: none; }
     .qr-image-wrapper { background: #fff; padding: 12px; border-radius: 16px; display: inline-block; margin: 16px 0; border: 4px solid var(--primary); }
-    .qr-image-wrapper img { width: 240px; height: 240px; display: block; }
-    
-    .bank-info { background: #0B1120; border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 20px; font-size: 14px; }
-    .bank-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .bank-row:last-child { margin-bottom: 0; }
-    .bank-row span { color: var(--text-muted); }
-    .bank-row strong { color: #fff; }
-    .copy-highlight { color: var(--primary) !important; font-family: monospace; font-size: 15px; font-weight: 800; }
+    .qr-image { width: 240px; height: 240px; display: block; }
+    .order-info { background: #0B1120; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: left; font-size: 14px; border: 1px dashed var(--border); }
+    .order-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .order-row:last-child { margin-bottom: 0; }
+    .highlight-code { color: var(--accent); font-weight: 800; font-family: monospace; font-size: 16px; }
+    .highlight-amount { color: var(--primary); font-weight: 800; font-size: 16px; }
 
-    .status-box { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; border-radius: 10px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: #FBBF24; font-size: 14px; font-weight: 700; margin-top: 16px; }
-    .spinner { width: 16px; height: 16px; border: 2px solid #FBBF24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+    /* Loading Pulse */
+    .status-box { display: flex; align-items: center; justify-content: center; gap: 8px; color: #F59E0B; font-size: 14px; font-weight: 600; margin: 12px 0; }
+    .spinner { width: 16px; height: 16px; border: 2px solid #F59E0B; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Success View */
     .success-container { text-align: center; display: none; padding: 20px 0; }
-    .success-icon { width: 72px; height: 72px; background: rgba(16,185,129,0.2); border: 2px solid var(--success); color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 16px; }
-    .success-title { font-size: 24px; font-weight: 800; color: var(--success); margin-bottom: 8px; }
-    .success-desc { font-size: 15px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
-    .nav-links { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
-    .nav-links a { color: var(--text-muted); font-size: 13px; text-decoration: none; }
+    .success-icon { width: 64px; height: 64px; background: rgba(16,185,129,0.2); color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 16px; border: 2px solid var(--success); }
+    .success-title { font-size: 22px; font-weight: 800; color: var(--success); margin-bottom: 8px; }
+    .success-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+    
+    .test-btn { background: #334155; color: #94A3B8; font-size: 12px; padding: 8px; margin-top: 16px; border-radius: 6px; width: 100%; border: 1px dashed #64748B; cursor: pointer; }
+    .test-btn:hover { color: #fff; border-color: var(--primary); }
   </style>
 </head>
 <body>
 
 <div class="checkout-card">
-  <!-- FORM STEP -->
+  <!-- STEP 1: FORM CHECKOUT -->
   <div id="step-form">
     <div class="header">
-      <span class="badge">THANH TOÁN TỰ ĐỘNG QUA SEPAY</span>
-      <h2 class="title">Đăng Ký & Nhận Sản Phẩm</h2>
-      <p class="subtitle">Quét mã VietQR chuyển khoản, kích hoạt ngay tức thì</p>
+      <span class="badge">WINDEAR CHECKOUT</span>
+      <h1 class="title">Đăng Ký & Mua Sản Phẩm</h1>
+      <p class="subtitle">Thanh toán tự động 24/7 qua Quét Mã VietQR SePay</p>
     </div>
 
-    <form id="checkoutForm" onsubmit="handleCheckout(event)">
+    <form id="checkout-form" onsubmit="handleCheckout(event)">
       <div class="form-group">
-        <label>Chọn sản phẩm / dịch vụ *</label>
-        <select id="co-product" class="form-control" onchange="updateProductAmount()" required></select>
+        <label>Chọn sản phẩm / Khóa học / Tai nghe *</label>
+        <select id="co-product" class="form-control" onchange="updateProductAmount()" required>
+          <!-- Dynamic products from API / localStorage -->
+        </select>
       </div>
 
       <div class="form-group">
-        <label>Họ và tên của bạn *</label>
-        <input type="text" id="co-name" class="form-control" required placeholder="Ví dụ: Trần Khả Hào">
+        <label>Họ và tên *</label>
+        <input type="text" id="co-name" class="form-control" placeholder="Nguyễn Văn A" required>
       </div>
 
       <div class="form-group">
-        <label>Số điện thoại / Zalo *</label>
-        <input type="tel" id="co-phone" class="form-control" required pattern="[0-9]{9,11}" placeholder="Ví dụ: 0332255107">
+        <label>Số điện thoại / Zalo nhận tài liệu *</label>
+        <input type="tel" id="co-phone" class="form-control" placeholder="0901234567" required>
       </div>
 
       <div class="form-group">
-        <label>Email nhận tài liệu / tài khoản *</label>
-        <input type="email" id="co-email" class="form-control" required placeholder="name@example.com">
+        <label>Email nhận file PDF / Hóa đơn</label>
+        <input type="email" id="co-email" class="form-control" placeholder="email@gmail.com">
       </div>
 
-      <button type="submit" class="btn btn-primary" id="btn-submit">
-        <span>Tiếp Tục Thanh Toán</span>
-        <span id="display-price">2.000 ₫</span>
+      <div class="form-group" style="background: rgba(6,182,212,0.08); padding: 12px; border-radius: 8px; border: 1px solid rgba(6,182,212,0.2);">
+        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+          <span>Tổng thanh toán:</span>
+          <strong id="display-price" style="color: var(--primary); font-size: 16px;">2.000 ₫</strong>
+        </div>
+      </div>
+
+      <button type="submit" id="btn-submit" class="btn btn-primary">
+        <span>Tiếp Tục Thanh Toán VietQR</span>
+        <span>&rarr;</span>
       </button>
-
-      <div class="nav-links">
-        <a href="/">🌐 Quay lại Trang Chủ Windear</a>
-      </div>
     </form>
   </div>
 
-  <!-- QR PAYMENT STEP -->
+  <!-- STEP 2: QR CODE VIETQR -->
   <div id="step-qr" class="qr-container">
     <div class="header">
       <span class="badge">QUÉT MÃ VIETQR SEPAY</span>
-      <h2 class="title">Chuyển Khoản Ngân Hàng</h2>
-      <p class="subtitle">Hệ thống sẽ tự động xác nhận ngay khi nhận được tiền</p>
+      <h2 class="title">Quét Mã Để Hoàn Tất</h2>
+      <p class="subtitle">Mở App Ngân Hàng bất kỳ hoặc MoMo để quét mã QR bên dưới</p>
     </div>
 
     <div class="qr-image-wrapper">
-      <img id="sepay-qr-img" src="" alt="Mã QR SePay">
+      <img id="sepay-qr-img" src="" alt="SePay VietQR" class="qr-image">
     </div>
 
-    <div class="bank-info">
-      <div class="bank-row">
-        <span>Ngân hàng:</span>
-        <strong>MB Bank (Ngân Hàng Quân Đội)</strong>
+    <div class="order-info">
+      <div class="order-row">
+        <span>Số tiền:</span>
+        <span class="highlight-amount" id="qr-amount-text">2.000 ₫</span>
       </div>
-      <div class="bank-row">
+      <div class="order-row">
+        <span>Nội dung chuyển khoản:</span>
+        <span class="highlight-code" id="qr-code-text">WD1001</span>
+      </div>
+      <div class="order-row">
+        <span>Ngân hàng nhận:</span>
+        <strong>MBBank (Ngân Hàng Quân Đội)</strong>
+      </div>
+      <div class="order-row">
         <span>Số tài khoản:</span>
-        <strong class="copy-highlight">0332255107</strong>
+        <strong style="font-family: monospace;">0332255107</strong>
       </div>
-      <div class="bank-row">
+      <div class="order-row">
         <span>Chủ tài khoản:</span>
         <strong>TRAN KHA HAO</strong>
-      </div>
-      <div class="bank-row">
-        <span>Số tiền:</span>
-        <strong class="copy-highlight" id="qr-amount-text">2.000 ₫</strong>
-      </div>
-      <div class="bank-row">
-        <span>Nội dung chuyển khoản:</span>
-        <strong class="copy-highlight" id="qr-code-text">WD12345</strong>
       </div>
     </div>
 
     <div class="status-box">
       <div class="spinner"></div>
-      <span>Đang chờ bạn quét mã chuyển tiền (hoặc kích hoạt trong /admin)...</span>
+      <span>Đang chờ hệ thống SePay xác nhận thanh toán...</span>
     </div>
 
-    <button onclick="testQuickSuccess()" class="btn" style="background:#1E293B; border:1px solid #334155; color:#94A3B8; font-size:12px; margin-top:14px;">
+    <button type="button" class="test-btn" onclick="testQuickSuccess()">
       ⚡ Test nhanh: Giả lập đã chuyển tiền thành công
     </button>
   </div>
@@ -167,30 +175,25 @@
 
   let currentOrderCode = '';
   let pollInterval = null;
-
-  function getStorage(key, defaultVal) {
-    try {
-      const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : defaultVal;
-    } catch(e) {
-      return defaultVal;
-    }
-  }
-
-  function setStorage(key, val) {
-    try {
-      localStorage.setItem(key, JSON.stringify(val));
-    } catch(e) {}
-  }
-
-  let productsList = getStorage('windear_crm_products', defaultProducts);
+  let productsList = defaultProducts;
 
   function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   }
 
-  function loadProducts() {
-    productsList = getStorage('windear_crm_products', defaultProducts);
+  async function loadProducts() {
+    try {
+      const res = await fetch('/api/products');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          productsList = data;
+        }
+      }
+    } catch(e) {
+      console.warn('Dùng danh sách sản phẩm mặc định');
+    }
+
     const select = document.getElementById('co-product');
     select.innerHTML = productsList.map(p => `
       <option value="${p.id}" data-price="${p.price}">${p.name} — ${formatMoney(p.price)}</option>
@@ -207,94 +210,82 @@
     }
   }
 
-  function handleCheckout(e) {
+  async function handleCheckout(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
     btn.disabled = true;
     btn.innerText = 'Đang khởi tạo đơn hàng...';
 
     const productId = parseInt(document.getElementById('co-product').value);
-    const name = document.getElementById('co-name').value;
-    const phone = document.getElementById('co-phone').value;
-    const email = document.getElementById('co-email').value;
+    const name = document.getElementById('co-name').value.trim();
+    const phone = document.getElementById('co-phone').value.trim();
+    const email = document.getElementById('co-email').value.trim();
 
     const prod = productsList.find(p => p.id === productId) || productsList[0];
-    const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+    let randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+    let amount = prod.price;
+
+    try {
+      // 1. Gửi request tạo đơn hàng lên Server Backend (Lưu vào shared database)
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          name: name,
+          phone: phone,
+          email: email
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.order_code) {
+          randCode = data.order_code;
+          amount = data.amount || amount;
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi gọi API create-order:', err);
+    }
+
     currentOrderCode = randCode;
 
-    // 1. Tạo và lưu khách hàng nếu mới
-    let customers = getStorage('windear_crm_customers', []);
-    let cust = customers.find(c => c.phone === phone);
-    if (!cust) {
-      cust = {
-        id: Date.now(),
-        name: name,
-        phone: phone,
-        zalo: phone,
-        email: email,
-        registered_date: new Date().toLocaleString('vi-VN')
-      };
-      customers.unshift(cust);
-      setStorage('windear_crm_customers', customers);
-    }
-
-    // 2. Tạo đơn hàng mới
-    const newOrder = {
-      id: Date.now(),
-      customer_id: cust.id,
-      product_id: prod.id,
-      product_name: prod.name,
-      customer_name: name,
-      customer_phone: phone,
-      amount: prod.price,
-      status: 'pending',
-      order_code: randCode,
-      created_at: new Date().toLocaleString('vi-VN')
-    };
-
-    // 3. Trừ kho nếu là sản phẩm vật lý
-    if (prod.type === 'physical') {
-      prod.stock = Math.max(0, (prod.stock || 0) - 1);
-      setStorage('windear_crm_products', productsList);
-    }
-
-    // 4. Lưu đơn hàng vào LocalStorage
-    let savedOrders = getStorage('windear_crm_orders', []);
-    savedOrders = savedOrders.filter(o => o.order_code !== randCode);
-    savedOrders.unshift(newOrder);
-    setStorage('windear_crm_orders', savedOrders);
-
-    // 5. Bắn BroadcastChannel tức thì sang tab Admin
+    // 2. BroadcastChannel đồng bộ tức thì cho các tab cùng trình duyệt
     try {
       const bc = new BroadcastChannel('windear_crm_channel');
-      bc.postMessage({ type: 'NEW_ORDER', order: newOrder });
+      bc.postMessage({ type: 'NEW_ORDER', order_code: randCode });
     } catch(e) {}
 
-    // Cập nhật giao diện QR
+    // 3. Chuyển sang màn hình QR VietQR SePay
     document.getElementById('step-form').style.display = 'none';
     document.getElementById('step-qr').style.display = 'block';
 
-    const qrUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0332255107&template=compact&amount=${prod.price}&des=${randCode}`;
+    const qrUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0332255107&template=compact&amount=${amount}&des=${randCode}`;
     document.getElementById('sepay-qr-img').src = qrUrl;
-    document.getElementById('qr-amount-text').innerText = formatMoney(prod.price);
+    document.getElementById('qr-amount-text').innerText = formatMoney(amount);
     document.getElementById('qr-code-text').innerText = randCode;
 
-    // Bắt đầu lắng nghe và polling trạng thái
+    // 4. Bắt đầu polling kiểm tra trạng thái đơn hàng từ Backend
     startPolling(randCode);
   }
 
   function startPolling(orderCode) {
     if (pollInterval) clearInterval(pollInterval);
-    pollInterval = setInterval(() => {
-      const localOrders = getStorage('windear_crm_orders', []);
-      const foundLocal = localOrders.find(o => o.order_code === orderCode);
-      if (foundLocal && foundLocal.status === 'success') {
-        showSuccess();
-      }
-    }, 1000);
+    pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/check-order-status?order_code=' + encodeURIComponent(orderCode));
+        if (res.ok) {
+          const ord = await res.json();
+          if (ord && ord.status === 'success') {
+            showSuccess();
+          }
+        }
+      } catch(e) {}
+    }, 1500);
   }
 
-  // Lắng nghe BroadcastChannel từ tab Admin khi bấm kích hoạt
+  // Lắng nghe BroadcastChannel từ tab Admin nếu cùng trình duyệt
   try {
     const bc = new BroadcastChannel('windear_crm_channel');
     bc.onmessage = (ev) => {
@@ -304,19 +295,14 @@
     };
   } catch(e) {}
 
-  window.addEventListener('storage', () => {
-    const localOrders = getStorage('windear_crm_orders', []);
-    const foundLocal = localOrders.find(o => o.order_code === currentOrderCode);
-    if (foundLocal && foundLocal.status === 'success') {
-      showSuccess();
-    }
-  });
-
-  function testQuickSuccess() {
-    const localOrders = getStorage('windear_crm_orders', []);
-    const found = localOrders.find(o => o.order_code === currentOrderCode);
-    if (found) found.status = 'success';
-    setStorage('windear_crm_orders', localOrders);
+  async function testQuickSuccess() {
+    try {
+      await fetch('/api/manual-success-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_code: currentOrderCode })
+      });
+    } catch(e) {}
 
     try {
       const bc = new BroadcastChannel('windear_crm_channel');

@@ -1,5 +1,6 @@
-// Shared Database Helper for Vercel Serverless Functions
-// Uses Cloud Key-Value REST sync + in-memory cache to ensure all reviewers/devices share the exact same state in real-time
+// Shared Database Helper — Persistent KV Cloud Storage via kvdb.io
+// kvdb.io: GET to read, PUT to write (NOT POST)
+// Falls back to in-memory if cloud unavailable (dev only)
 
 const BUCKET = 'https://kvdb.io/A8v8Qz6D5xQzY7wB2yJ4tK';
 
@@ -19,60 +20,65 @@ const DEFAULT_ORDERS = [
   { id: 1, customer_id: 1, product_id: 1, product_name: "Sổ Tay 100 Cụm Từ Nối Âm & Nuốt Âm Hollywood", customer_name: "Trần Khả Hào", customer_phone: "0332255107", amount: 2000, status: "pending", order_code: "WD1001", created_at: "2026-08-08 23:55:00" }
 ];
 
-// Global in-memory cache
-global._windear_cache = global._windear_cache || {
-  products: null,
-  customers: null,
-  orders: null
-};
+const DEFAULTS = { products: DEFAULT_PRODUCTS, customers: DEFAULT_CUSTOMERS, orders: DEFAULT_ORDERS };
+
+// In-memory cache per Lambda instance (warm cache, NOT cross-function)
+if (!global._wc) global._wc = {};
 
 export async function getCollection(name) {
-  // 1. Try fetching from Cloud KV
+  // 1. Try Cloud KV first
   try {
-    const res = await fetch(`${BUCKET}/${name}`, { cache: 'no-store' });
+    const res = await fetch(`${BUCKET}/${name}`, {
+      headers: { 'Accept': 'application/json' }
+    });
     if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        global._windear_cache[name] = data;
-        return data;
+      const text = await res.text();
+      if (text && text.trim().startsWith('[')) {
+        const data = JSON.parse(text);
+        if (Array.isArray(data)) {
+          global._wc[name] = data;
+          return data;
+        }
       }
     }
   } catch (err) {
-    console.error(`Error reading cloud ${name}:`, err.message);
+    console.error(`[getCollection] cloud read ${name} failed:`, err.message);
   }
 
-  // 2. Return memory cache if available
-  if (global._windear_cache[name] && global._windear_cache[name].length > 0) {
-    return global._windear_cache[name];
+  // 2. Memory cache fallback (within same Lambda warm instance)
+  if (Array.isArray(global._wc[name])) {
+    return global._wc[name];
   }
 
-  // 3. Fallback to defaults
-  let defaults = [];
-  if (name === 'products') defaults = [...DEFAULT_PRODUCTS];
-  else if (name === 'customers') defaults = [...DEFAULT_CUSTOMERS];
-  else if (name === 'orders') defaults = [...DEFAULT_ORDERS];
-
-  global._windear_cache[name] = defaults;
-  // Initialize Cloud KV in background
+  // 3. Default + initialize cloud in background
+  const defaults = JSON.parse(JSON.stringify(DEFAULTS[name] || []));
+  global._wc[name] = defaults;
   saveCollection(name, defaults).catch(() => {});
   return defaults;
 }
 
 export async function saveCollection(name, data) {
-  global._windear_cache[name] = data;
+  // Update memory cache immediately
+  global._wc[name] = data;
+
+  // Persist to Cloud KV using PUT
   try {
     await fetch(`${BUCKET}/${name}`, {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
   } catch (err) {
-    console.error(`Error saving cloud ${name}:`, err.message);
+    console.error(`[saveCollection] cloud write ${name} failed:`, err.message);
   }
+  return data;
 }
 
 export function setCorsHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-SePay-Signature');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-SePay-Signature, Authorization');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 }

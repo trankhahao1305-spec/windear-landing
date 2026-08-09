@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Windear CRM — Trang Quản Trị Admin Panel</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -318,11 +321,6 @@
   let customers = getStorage('windear_crm_customers', defaultCustomers);
   let orders = getStorage('windear_crm_orders', defaultOrders);
 
-  // Khởi tạo storage ban đầu nếu trống
-  setStorage('windear_crm_products', products);
-  setStorage('windear_crm_customers', customers);
-  setStorage('windear_crm_orders', orders);
-
   function formatMoney(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   }
@@ -351,10 +349,29 @@
   function openModal(id) { document.getElementById(id).classList.add('active'); }
   function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-  function loadData() {
-    products = getStorage('windear_crm_products', defaultProducts);
-    customers = getStorage('windear_crm_customers', defaultCustomers);
-    orders = getStorage('windear_crm_orders', defaultOrders);
+  async function loadData() {
+    try {
+      const [prodRes, custRes, ordRes] = await Promise.all([
+        fetch('/api/products').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch('/api/customers').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch('/api/orders').then(r => r.ok ? r.json() : null).catch(() => null)
+      ]);
+
+      if (Array.isArray(prodRes) && prodRes.length > 0) {
+        products = prodRes;
+        setStorage('windear_crm_products', products);
+      }
+      if (Array.isArray(custRes) && custRes.length > 0) {
+        customers = custRes;
+        setStorage('windear_crm_customers', customers);
+      }
+      if (Array.isArray(ordRes) && ordRes.length > 0) {
+        orders = ordRes;
+        setStorage('windear_crm_orders', orders);
+      }
+    } catch(e) {
+      console.warn('Dùng cache local');
+    }
 
     renderProducts();
     renderCustomers();
@@ -457,7 +474,7 @@
     }
   }
 
-  function saveProduct(e) {
+  async function saveProduct(e) {
     e.preventDefault();
     const data = {
       id: products.length ? Math.max(...products.map(p => p.id)) + 1 : 1,
@@ -468,14 +485,22 @@
       stock: document.getElementById('prod-type').value === 'physical' ? parseInt(document.getElementById('prod-stock').value || 0) : null
     };
 
+    try {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(e) {}
+
     products.unshift(data);
     setStorage('windear_crm_products', products);
     closeModal('productModal');
-    loadData();
+    await loadData();
     notifySync('PRODUCTS_UPDATED');
   }
 
-  function saveCustomer(e) {
+  async function saveCustomer(e) {
     e.preventDefault();
     const data = {
       id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
@@ -486,14 +511,22 @@
       registered_date: new Date().toLocaleString('vi-VN')
     };
 
+    try {
+      await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch(e) {}
+
     customers.unshift(data);
     setStorage('windear_crm_customers', customers);
     closeModal('customerModal');
-    loadData();
+    await loadData();
     notifySync('CUSTOMERS_UPDATED');
   }
 
-  function saveOrder(e) {
+  async function saveOrder(e) {
     e.preventDefault();
     const custId = parseInt(document.getElementById('ord-customer').value);
     const prodId = parseInt(document.getElementById('ord-product').value);
@@ -518,6 +551,14 @@
       created_at: new Date().toLocaleString('vi-VN')
     };
 
+    try {
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+    } catch(e) {}
+
     if (prod.type === 'physical') {
       prod.stock = Math.max(0, (prod.stock || 0) - 1);
       setStorage('windear_crm_products', products);
@@ -526,22 +567,39 @@
     orders.unshift(orderData);
     setStorage('windear_crm_orders', orders);
     closeModal('orderModal');
-    loadData();
+    await loadData();
     notifySync('ORDERS_UPDATED');
   }
 
-  function triggerManualSuccess(orderCode) {
+  async function triggerManualSuccess(orderCode) {
     const ord = orders.find(o => o.order_code === orderCode || o.id == orderCode);
     if (ord) {
       ord.status = 'success';
       setStorage('windear_crm_orders', orders);
-      loadData();
-      notifySync('ORDER_ACTIVATED', { order_code: orderCode });
+      renderOrders();
     }
+
+    try {
+      await fetch('/api/manual-success-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_code: orderCode })
+      });
+    } catch(e) {}
+
+    await loadData();
+    notifySync('ORDER_ACTIVATED', { order_code: orderCode });
   }
 
-  function deleteItem(table, id) {
+  async function deleteItem(table, id) {
     if (!confirm('Bạn có chắc muốn xóa bản ghi #' + id + '?')) return;
+
+    try {
+      await fetch('/api/' + table + '?id=' + id, {
+        method: 'DELETE'
+      });
+    } catch(e) {}
+
     if (table === 'products') {
       products = products.filter(p => p.id !== id);
       setStorage('windear_crm_products', products);
@@ -554,7 +612,7 @@
       orders = orders.filter(o => o.id !== id);
       setStorage('windear_crm_orders', orders);
     }
-    loadData();
+    await loadData();
     notifySync('DATA_DELETED');
   }
 
@@ -574,7 +632,7 @@
   window.addEventListener('storage', () => { loadData(); });
 
   loadData();
-  setInterval(loadData, 1000);
+  setInterval(loadData, 2000);
 </script>
 
 </body>
