@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     { id: 4, name: "TeST review", phone: "0755598888", zalo: "0755598888", email: "test@gmail.com", registered_date: "2026-08-09 06:06:03" }
   ];
 
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL || 'https://suited-marmot-48766.upstash.io';
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
 
   if (redisUrl && redisToken) {
     try {

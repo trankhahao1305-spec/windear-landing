@@ -122,8 +122,10 @@ export default async function handler(req, res) {
       registered_date: new Date().toLocaleString('vi-VN')
     };
 
-    const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    // Tự động lưu vào Upstash Redis hoặc Cloud JSON Bin
+    const redisUrl = process.env.UPSTASH_REDIS_REST_URL || 'https://suited-marmot-48766.upstash.io';
+    const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
+
     if (redisUrl && redisToken) {
       try {
         const valStr = JSON.stringify(newCustomer);
