@@ -1,10 +1,7 @@
-export default async function handler(req, res) {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+import { getCollection, saveCollection, setCorsHeaders } from './_db.js';
 
+export default async function handler(req, res) {
+  setCorsHeaders(res);
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -111,36 +108,31 @@ export default async function handler(req, res) {
     const r3 = await sendMail('Bắt tay vào trị dứt điểm nghe trôi tuột chữ với Ebook 4 Bước Luyện Tai (Chỉ 2.000đ) 📚⚡', email3Html);
     emailResults.push(r3);
 
-    const newCustomer = {
-      id: Date.now(),
-      name: name || 'Khách hàng',
-      phone: phone || '',
-      zalo: phone || '',
-      email: email,
-      goal: goal || '',
-      note: note || '',
-      registered_date: new Date().toLocaleString('vi-VN')
-    };
-
-    // Upstash Command Array Format (100% foolproof Redis command)
-    try {
-      await fetch('https://suited-marmot-48766.upstash.io', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(["LPUSH", "windear_customers_list", JSON.stringify(newCustomer)])
-      });
-      console.log('✅ Direct Upstash LPUSH Command Executed Successfully!');
-    } catch (err) {
-      console.error('Upstash Command Error:', err);
+    // Lưu thông tin khách hàng mới vào Database
+    const customers = await getCollection('customers');
+    let cust = customers.find(c => (phone && c.phone === phone) || (email && c.email === email));
+    if (!cust) {
+      cust = {
+        id: Date.now(),
+        name: name || 'Khách hàng',
+        phone: phone || '',
+        zalo: phone || '',
+        email: email,
+        goal: goal || '',
+        note: note || '',
+        registered_date: new Date().toLocaleString('vi-VN')
+      };
+      customers.unshift(cust);
+    } else {
+      if (name) cust.name = name;
+      if (phone) cust.phone = phone;
     }
+    await saveCollection('customers', customers);
 
     return res.status(200).json({
       success: true,
       emailResults,
-      customer: newCustomer
+      customer: cust
     });
   } catch (error) {
     console.error('Vercel Function Error:', error);

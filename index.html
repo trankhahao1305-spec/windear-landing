@@ -795,31 +795,19 @@
       if (formView) formView.style.display = 'none';
       if (thankYouView) thankYouView.style.display = 'flex';
 
-        // Push trực tiếp lên Upstash Redis từ trình duyệt (Zero risk fallback)
-        try {
-          fetch('https://suited-marmot-48766.upstash.io', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(["LPUSH", "windear_customers_list", JSON.stringify({
-              id: Date.now(),
-              name: name,
-              phone: phone,
-              zalo: phone,
-              email: email,
-              goal: goal,
-              note: note,
-              registered_date: new Date().toLocaleString('vi-VN')
-            })])
-          });
-        } catch(err) {}
-
         // Phát sóng đồng bộ thời gian thực sang Tab Admin ngay lập tức
         try {
           const bc = new BroadcastChannel('windear_crm_channel');
-          bc.postMessage({ type: 'CUSTOMERS_UPDATED' });
+          bc.postMessage({ type: 'CUSTOMERS_UPDATED', customer: {
+            id: Date.now(),
+            name: name,
+            phone: phone,
+            zalo: phone,
+            email: email,
+            goal: goal,
+            note: note,
+            registered_date: new Date().toLocaleString('vi-VN')
+          }});
         } catch(e) {}
     };
   </script>
