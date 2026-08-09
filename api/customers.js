@@ -16,10 +16,13 @@ export default async function handler(req, res) {
 
   if (redisUrl && redisToken) {
     try {
-      const resp = await fetch(`${redisUrl}/lrange/windear_customers/0/100`, {
+      const resp = await fetch(redisUrl, {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${redisToken}`
-        }
+          'Authorization': `Bearer ${redisToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(["LRANGE", "windear_customers", "0", "100"])
       });
       const data = await resp.json();
       if (data && Array.isArray(data.result) && data.result.length > 0) {
