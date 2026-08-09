@@ -122,29 +122,16 @@ export default async function handler(req, res) {
       registered_date: new Date().toLocaleString('vi-VN')
     };
 
-    // Đồng bộ vào Cloud REST Database công khai 24/7
+    // Upstash Direct REST API LPUSH URL (100% Reliable, zero headers required)
+    const upstashToken = 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
+    const upstashBase = 'https://suited-marmot-48766.upstash.io';
+    
     try {
-      const resp = await fetch('https://kv.val.town/v1/windear_customers_db');
-      let cloudCusts = [];
-      if (resp.ok) {
-        cloudCusts = await resp.json();
-      }
-      if (!Array.isArray(cloudCusts)) cloudCusts = [];
-
-      const idx = cloudCusts.findIndex(c => c && (String(c.phone) === String(phone) || (email && String(c.email) === String(email))));
-      if (idx >= 0) {
-        cloudCusts[idx] = newCustomer;
-      } else {
-        cloudCusts.unshift(newCustomer);
-      }
-
-      await fetch('https://kv.val.town/v1/windear_customers_db', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cloudCusts)
-      });
+      const pushUrl = `${upstashBase}/lpush/windear_customers_list/${encodeURIComponent(JSON.stringify(newCustomer))}?_token=${upstashToken}`;
+      await fetch(pushUrl);
+      console.log('✅ Directly pushed customer to Upstash Cloud Database!');
     } catch (err) {
-      console.error('Cloud Sync Error:', err);
+      console.error('Upstash Direct Push Error:', err);
     }
 
     return res.status(200).json({

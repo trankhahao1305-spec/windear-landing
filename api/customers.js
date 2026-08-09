@@ -11,13 +11,21 @@ export default async function handler(req, res) {
     { id: 4, name: "TeST review", phone: "0755598888", zalo: "0755598888", email: "test@gmail.com", registered_date: "2026-08-09 06:06:03" }
   ];
 
+  const upstashToken = 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
+  const upstashBase = 'https://suited-marmot-48766.upstash.io';
+
   try {
-    const resp = await fetch('https://kv.val.town/v1/windear_customers_db');
+    const rangeUrl = `${upstashBase}/lrange/windear_customers_list/0/100?_token=${upstashToken}`;
+    const resp = await fetch(rangeUrl);
     if (resp.ok) {
-      const cloudCusts = await resp.json();
-      if (Array.isArray(cloudCusts) && cloudCusts.length > 0) {
+      const data = await resp.json();
+      if (data && Array.isArray(data.result) && data.result.length > 0) {
+        const redisCusts = data.result.map(str => {
+          try { return JSON.parse(str); } catch(e) { return null; }
+        }).filter(Boolean);
+
         const map = new Map();
-        [...cloudCusts, ...defaultCustomers].forEach(c => {
+        [...redisCusts, ...defaultCustomers].forEach(c => {
           if (c && (c.phone || c.id || c.email)) {
             const key = c.phone || c.email || c.id;
             if (!map.has(key)) map.set(key, c);
@@ -27,7 +35,7 @@ export default async function handler(req, res) {
       }
     }
   } catch (err) {
-    console.error('Cloud Fetch Error:', err);
+    console.error('Upstash Direct LRANGE Error:', err);
   }
 
   return res.status(200).json(defaultCustomers);
