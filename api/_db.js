@@ -1,6 +1,6 @@
-// Shared Database Helper — Upstash Redis (free, no email verify, GitHub login)
-// Uses Upstash REST API: set/get key-value with JSON serialization
-// Env vars required: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+// Shared Database Helper — Upstash Redis REST API
+// Correct command format: POST / with body ["COMMAND", "args..."]
+// Docs: https://upstash.com/docs/redis/features/restapi
 
 const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
 const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -20,70 +20,71 @@ const DEFAULT_ORDERS = [
 ];
 const DEFAULTS = { products: DEFAULT_PRODUCTS, customers: DEFAULT_CUSTOMERS, orders: DEFAULT_ORDERS };
 
-// In-memory warm cache
 if (!global._wc) global._wc = {};
 
-async function upstashGet(key) {
+// ---- Upstash Redis REST API helpers ----
+async function upstashCmd(...args) {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return null;
   try {
-    const res = await fetch(`${UPSTASH_URL}/get/${key}`, {
-      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
+    const res = await fetch(UPSTASH_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${UPSTASH_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(args)
     });
-    if (!res.ok) return null;
     const json = await res.json();
-    if (json.result && typeof json.result === 'string') {
-      return JSON.parse(json.result);
+    if (!res.ok) {
+      console.error(`[upstash] ${args[0]} error ${res.status}:`, json);
+      return null;
     }
-    return null;
+    return json.result ?? null;
   } catch (e) {
-    console.error('[upstashGet] error:', e.message);
+    console.error('[upstash] network error:', e.message);
     return null;
   }
+}
+
+async function upstashGet(key) {
+  const result = await upstashCmd('GET', key);
+  if (result && typeof result === 'string') {
+    try { return JSON.parse(result); } catch(e) { return null; }
+  }
+  return null;
 }
 
 async function upstashSet(key, value) {
-  if (!UPSTASH_URL || !UPSTASH_TOKEN) return;
-  try {
-    const res = await fetch(`${UPSTASH_URL}/set/${key}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${UPSTASH_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(JSON.stringify(value))
-    });
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error(`[upstashSet] ${key} → ${res.status}: ${errText}`);
-    }
-  } catch (e) {
-    console.error('[upstashSet] error:', e.message);
-  }
+  // SET key value — store JSON string
+  const result = await upstashCmd('SET', key, JSON.stringify(value));
+  console.log(`[upstash] SET ${key} →`, result); // Should log "OK"
+  return result;
 }
 
+// ---- Public API ----
 export async function getCollection(name) {
   // 1. Try Upstash cloud
-  const cloudData = await upstashGet(`windear_${name}`);
+  const cloudData = await upstashGet(`windear:${name}`);
   if (Array.isArray(cloudData) && cloudData.length > 0) {
     global._wc[name] = cloudData;
     return cloudData;
   }
 
-  // 2. In-memory warm cache
+  // 2. Warm in-memory cache (same Lambda invocation)
   if (Array.isArray(global._wc[name]) && global._wc[name].length > 0) {
     return global._wc[name];
   }
 
-  // 3. Defaults → initialize cloud
+  // 3. Defaults — write to cloud to bootstrap
   const defaults = JSON.parse(JSON.stringify(DEFAULTS[name] || []));
   global._wc[name] = defaults;
-  upstashSet(`windear_${name}`, defaults).catch(() => {});
+  upstashSet(`windear:${name}`, defaults).catch(() => {});
   return defaults;
 }
 
 export async function saveCollection(name, data) {
   global._wc[name] = data;
-  await upstashSet(`windear_${name}`, data);
+  await upstashSet(`windear:${name}`, data);
   return data;
 }
 
