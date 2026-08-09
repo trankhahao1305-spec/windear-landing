@@ -122,29 +122,29 @@ export default async function handler(req, res) {
       registered_date: new Date().toLocaleString('vi-VN')
     };
 
-    // Đồng bộ vào Cloud Database 24/7 cho mọi thiết bị
+    // Đồng bộ vào Cloud REST Database công khai 24/7
     try {
-      const resp = await fetch('https://kv.val.town/v1/windear_customers');
+      const resp = await fetch('https://kv.val.town/v1/windear_customers_db');
       let cloudCusts = [];
       if (resp.ok) {
         cloudCusts = await resp.json();
       }
       if (!Array.isArray(cloudCusts)) cloudCusts = [];
-      
-      const idx = cloudCusts.findIndex(c => c && (c.phone === phone || c.email === email));
+
+      const idx = cloudCusts.findIndex(c => c && (String(c.phone) === String(phone) || (email && String(c.email) === String(email))));
       if (idx >= 0) {
         cloudCusts[idx] = newCustomer;
       } else {
         cloudCusts.unshift(newCustomer);
       }
 
-      await fetch('https://kv.val.town/v1/windear_customers', {
+      await fetch('https://kv.val.town/v1/windear_customers_db', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(cloudCusts)
       });
     } catch (err) {
-      console.error('Cloud KV Error:', err);
+      console.error('Cloud Sync Error:', err);
     }
 
     return res.status(200).json({

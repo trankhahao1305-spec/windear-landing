@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   ];
 
   try {
-    const resp = await fetch('https://kv.val.town/v1/windear_customers');
+    const resp = await fetch('https://kv.val.town/v1/windear_customers_db');
     if (resp.ok) {
       const cloudCusts = await resp.json();
       if (Array.isArray(cloudCusts) && cloudCusts.length > 0) {
