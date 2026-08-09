@@ -391,6 +391,18 @@
     document.getElementById('count-orders').innerText = orders.length;
   }
 
+  // Tự động lắng nghe tín hiệu từ các tab khác và cập nhật CRM ngay lập tức
+  try {
+    const bc = new BroadcastChannel('windear_crm_channel');
+    bc.onmessage = function(ev) {
+      console.log('🔄 CRM nhận tín hiệu cập nhật mới:', ev.data);
+      loadData();
+    };
+  } catch(e) {}
+
+  // Polling tự động mỗi 3 giây để trang Admin luôn mới nhất 24/7
+  setInterval(loadData, 3000);
+
   function renderProducts() {
     const tbody = document.getElementById('products-table-body');
     tbody.innerHTML = products.map(p => `
