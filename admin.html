@@ -371,8 +371,8 @@
             if (!map.has(key)) map.set(key, c);
           }
         });
-        const deletedIds = getStorage('windear_crm_deleted_customers', []);
-        customers = Array.from(map.values()).filter(c => c && !deletedIds.includes(c.id));
+        const deletedIds = getStorage('windear_crm_deleted_customers', []).map(String);
+        customers = Array.from(map.values()).filter(c => c && !deletedIds.includes(String(c.id)));
         setStorage('windear_crm_customers', customers);
       }
       if (Array.isArray(ordRes) && ordRes.length > 0) {
@@ -627,12 +627,14 @@
       setStorage('windear_crm_products', products);
     }
     if (table === 'customers') {
-      const deletedIds = getStorage('windear_crm_deleted_customers', []);
-      if (!deletedIds.includes(id)) deletedIds.push(id);
+      const deletedIds = getStorage('windear_crm_deleted_customers', []).map(String);
+      if (!deletedIds.includes(String(id))) deletedIds.push(String(id));
       setStorage('windear_crm_deleted_customers', deletedIds);
 
-      customers = customers.filter(c => c.id !== id);
+      customers = customers.filter(c => String(c.id) !== String(id));
       setStorage('windear_crm_customers', customers);
+      renderCustomers();
+      document.getElementById('count-customers').innerText = customers.length;
     }
     if (table === 'orders') {
       orders = orders.filter(o => o.id !== id);
