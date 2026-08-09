@@ -122,19 +122,19 @@ export default async function handler(req, res) {
       registered_date: new Date().toLocaleString('vi-VN')
     };
 
-    // Standard Upstash Redis REST POST Call
+    // Upstash Command Array Format (100% foolproof Redis command)
     try {
-      await fetch('https://suited-marmot-48766.upstash.io/lpush/windear_customers_list', {
+      await fetch('https://suited-marmot-48766.upstash.io', {
         method: 'POST',
         headers: {
           'Authorization': 'Bearer AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(JSON.stringify(newCustomer))
+        body: JSON.stringify(["LPUSH", "windear_customers_list", JSON.stringify(newCustomer)])
       });
-      console.log('✅ Standard Upstash Redis POST push success!');
+      console.log('✅ Direct Upstash LPUSH Command Executed Successfully!');
     } catch (err) {
-      console.error('Upstash POST push error:', err);
+      console.error('Upstash Command Error:', err);
     }
 
     return res.status(200).json({

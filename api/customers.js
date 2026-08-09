@@ -11,17 +11,20 @@ export default async function handler(req, res) {
     { id: 4, name: "TeST review", phone: "0755598888", zalo: "0755598888", email: "test@gmail.com", registered_date: "2026-08-09 06:06:03" }
   ];
 
-  const upstashToken = 'AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY';
-  const upstashBase = 'https://suited-marmot-48766.upstash.io';
-
   try {
-    const rangeUrl = `${upstashBase}/lrange/windear_customers_list/0/100?_token=${upstashToken}`;
-    const resp = await fetch(rangeUrl);
+    const resp = await fetch('https://suited-marmot-48766.upstash.io', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer AcV-AAincDE1NGM4MDRiNmY5ZDY0OTg4OGY0OWEzNjY1MDQxZGUxN3AxNDg3NjY',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(["LRANGE", "windear_customers_list", "0", "100"])
+    });
     if (resp.ok) {
       const data = await resp.json();
       if (data && Array.isArray(data.result) && data.result.length > 0) {
         const redisCusts = data.result.map(str => {
-          try { return JSON.parse(str); } catch(e) { return null; }
+          try { return typeof str === 'string' ? JSON.parse(str) : str; } catch(e) { return null; }
         }).filter(Boolean);
 
         const map = new Map();
@@ -35,7 +38,7 @@ export default async function handler(req, res) {
       }
     }
   } catch (err) {
-    console.error('Upstash Direct LRANGE Error:', err);
+    console.error('Upstash LRANGE Command Error:', err);
   }
 
   return res.status(200).json(defaultCustomers);
