@@ -363,10 +363,11 @@
       }
       if (Array.isArray(custRes) && custRes.length > 0) {
         const localCusts = getStorage('windear_crm_customers', []);
+        const combined = [...localCusts, ...custRes];
         const map = new Map();
-        [...localCusts, ...custRes].forEach(c => {
-          if (c && (c.phone || c.id)) {
-            const key = c.phone || c.id;
+        combined.forEach(c => {
+          if (c && (c.phone || c.id || c.email)) {
+            const key = c.phone || c.email || c.id;
             if (!map.has(key)) map.set(key, c);
           }
         });
