@@ -262,7 +262,17 @@
     <form id="orderForm" onsubmit="saveOrder(event)">
       <div class="form-group">
         <label>Khách hàng *</label>
-        <select id="ord-customer" class="form-control" required></select>
+        <select id="ord-customer" class="form-control" onchange="toggleQuickCustFields()" required></select>
+      </div>
+      <div id="quick-cust-fields" style="display: none; background: rgba(6, 182, 212, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed rgba(6, 182, 212, 0.3);">
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label>Tên Khách Hàng Mới *</label>
+          <input type="text" id="quick-cust-name" class="form-control" placeholder="Ví dụ: Trần Khả Hào">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Email Nhận Mail Đơn Hàng *</label>
+          <input type="email" id="quick-cust-email" class="form-control" placeholder="haotrankha53@gmail.com">
+        </div>
       </div>
       <div class="form-group">
         <label>Sản phẩm *</label>
@@ -498,11 +508,31 @@
     const custSelect = document.getElementById('ord-customer');
     const prodSelect = document.getElementById('ord-product');
 
-    custSelect.innerHTML = customers.map(c => `<option value="${c.id}">${c.name} (${c.phone || ''} ${c.email ? '· ' + c.email : ''})</option>`).join('');
+    const options = [
+      `<option value="NEW_QUICK">➕ Thêm Khách Hàng Mới Nhanh (Email Trực Tiếp)...</option>`,
+      ...customers.map(c => `<option value="${c.id}">${c.name} (${c.phone || ''} ${c.email ? '· ' + c.email : ''})</option>`)
+    ];
+
+    custSelect.innerHTML = options.join('');
     prodSelect.innerHTML = products.map(p => `<option value="${p.id}" data-price="${p.price}" data-type="${p.type}">${p.name} — ${formatMoney(p.price)} (${p.type})</option>`).join('');
 
+    toggleQuickCustFields();
     updateOrderPrice();
     openModal('orderModal');
+  }
+
+  function toggleQuickCustFields() {
+    const val = document.getElementById('ord-customer').value;
+    const box = document.getElementById('quick-cust-fields');
+    if (val === 'NEW_QUICK') {
+      box.style.display = 'block';
+      document.getElementById('quick-cust-name').required = true;
+      document.getElementById('quick-cust-email').required = true;
+    } else {
+      box.style.display = 'none';
+      document.getElementById('quick-cust-name').required = false;
+      document.getElementById('quick-cust-email').required = false;
+    }
   }
 
   function updateOrderPrice() {
@@ -574,14 +604,30 @@
 
   async function saveOrder(e) {
     e.preventDefault();
-    const custId = parseInt(document.getElementById('ord-customer').value);
+    const custVal = document.getElementById('ord-customer').value;
     const prodId = parseInt(document.getElementById('ord-product').value);
     const amount = parseFloat(document.getElementById('ord-amount').value);
     const status = document.getElementById('ord-status').value;
 
-    const cust = customers.find(c => c.id === custId) || { name: 'Khách hàng', phone: '' };
-    const prod = products.find(p => p.id === prodId) || { name: 'Sản phẩm', type: 'digital' };
+    let cust = null;
+    if (custVal === 'NEW_QUICK') {
+      const qName = document.getElementById('quick-cust-name').value;
+      const qEmail = document.getElementById('quick-cust-email').value;
+      cust = {
+        id: Date.now(),
+        name: qName || 'Khách hàng',
+        phone: '0900000000',
+        zalo: '0900000000',
+        email: qEmail,
+        registered_date: new Date().toLocaleString('vi-VN')
+      };
+      customers.unshift(cust);
+      setStorage('windear_crm_customers', customers);
+    } else {
+      cust = customers.find(c => String(c.id) === String(custVal)) || { id: 1, name: 'Khách hàng', phone: '', email: 'haotrankha53@gmail.com' };
+    }
 
+    const prod = products.find(p => p.id === prodId) || products[0];
     const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
 
     const orderData = {
