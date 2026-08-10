@@ -733,8 +733,21 @@
       }, 300);
     };
 
-    // Direct Waitlist Button OnClick Handler
-    window.submitWaitlistFormDirect = async function() {
+    // Direct Waitlist Button OnClick Handler (With Duplicate Prevention Lock)
+    var isWaitlistSubmitting = false;
+
+    window.submitWaitlistFormDirect = async function(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (isWaitlistSubmitting) return;
+      isWaitlistSubmitting = true;
+
+      var submitBtn = document.getElementById('btn-native-submit');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.innerText = '⏳ Đang xử lý đăng ký...';
+      }
+
       var name = (document.getElementById('cust-name') || {}).value || '';
       var email = (document.getElementById('cust-email') || {}).value || '';
       var phone = (document.getElementById('cust-phone') || {}).value || '';
@@ -743,6 +756,12 @@
 
       if (!name || !email || !phone) {
         alert('Vui lòng điền đầy đủ Họ tên, Email và Số điện thoại!');
+        isWaitlistSubmitting = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerText = '🚀 Đăng ký Waitlist & Nhận Quà Ngay';
+        }
         return;
       }
 
@@ -755,12 +774,12 @@
         timestamp: new Date().toLocaleString('vi-VN')
       };
 
-      console.log('🚀 [Direct Submit] Gửi dữ liệu tới /api/save-customer:', entry);
+      console.log('🚀 [Direct Submit] Gửi dữ liệu duy nhất tới /api/save-customer:', entry);
 
-      // Lưu khách hàng mới vào localStorage windear_crm_customers để Admin hiển thị tức thì trên Vercel/Live
+      // Lưu khách hàng mới vào localStorage windear_crm_customers
       try {
         var crmCusts = JSON.parse(localStorage.getItem('windear_crm_customers') || '[]');
-        var idx = crmCusts.findIndex(function(c) { return c.phone === phone; });
+        var idx = crmCusts.findIndex(function(c) { return c.phone === phone || c.email === email; });
         if (idx >= 0) {
           crmCusts[idx].email = email;
           crmCusts[idx].name = name;
@@ -794,6 +813,16 @@
       var thankYouView = document.getElementById('modal-thankyou-view');
       if (formView) formView.style.display = 'none';
       if (thankYouView) thankYouView.style.display = 'flex';
+
+      // Reset lock
+      setTimeout(function() {
+        isWaitlistSubmitting = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.innerText = '🚀 Đăng ký Waitlist & Nhận Quà Ngay';
+        }
+      }, 2000);
 
         // Phát sóng đồng bộ thời gian thực sang Tab Admin ngay lập tức
         try {

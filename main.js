@@ -235,67 +235,16 @@
       });
     }
 
-    // Native Form Submission Listener (Direct Clean Async Submit)
+    // Native Form Submission Listener (Delegated to Unified Single Direct Submit)
     var nativeForm = document.getElementById('native-customer-form');
     if (nativeForm) {
-      nativeForm.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        
-        var name = (document.getElementById('cust-name') || {}).value || '';
-        var email = (document.getElementById('cust-email') || {}).value || '';
-        var phone = (document.getElementById('cust-phone') || {}).value || '';
-        var goal = (document.getElementById('cust-goal') || {}).value || '';
-        var note = (document.getElementById('cust-note') || {}).value || '';
-        var timestamp = new Date().toLocaleString('vi-VN');
-
-        var customerEntry = {
-          timestamp: timestamp,
-          name: name,
-          email: email,
-          phone: phone,
-          goal: goal,
-          note: note
-        };
-
-        console.log('🚀 [Client Submit] Đang gửi thông tin đăng ký tới server:', customerEntry);
-
-        // Lưu khách hàng mới vào localStorage windear_crm_customers để Admin hiển thị tức thì trên Vercel/Live
-        try {
-          var crmCusts = JSON.parse(localStorage.getItem('windear_crm_customers') || '[]');
-          var idx = crmCusts.findIndex(function(c) { return c.phone === phone; });
-          if (idx >= 0) {
-            crmCusts[idx].email = email;
-            crmCusts[idx].name = name;
-          } else {
-            crmCusts.unshift({
-              id: Date.now(),
-              name: name,
-              phone: phone,
-              zalo: phone,
-              email: email,
-              registered_date: new Date().toLocaleString('vi-VN')
-            });
-          }
-          localStorage.setItem('windear_crm_customers', JSON.stringify(crmCusts));
-        } catch(err) {}
-
-        try {
-          var res = await fetch('/api/save-customer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(customerEntry)
-          });
-          var data = await res.json();
-          console.log('✅ [Client Submit] Server phản hồi thành công:', data);
-        } catch (err) {
-          console.error('❌ [Client Submit] Lỗi gửi tới server:', err);
+      nativeForm.addEventListener('submit', function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (window.submitWaitlistFormDirect) {
+          window.submitWaitlistFormDirect(e);
         }
-
-        // Chuyển sang màn hình Cảm ơn
-        var formView = document.getElementById('modal-form-view');
-        var thankYouView = document.getElementById('modal-thankyou-view');
-        if (formView) formView.style.display = 'none';
-        if (thankYouView) thankYouView.style.display = 'flex';
+      });
+    }
 
         // Đồng bộ thời gian thực cho trang Admin
         try {
