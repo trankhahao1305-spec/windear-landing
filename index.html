@@ -796,6 +796,31 @@
         localStorage.setItem('windear_crm_customers', JSON.stringify(crmCusts));
       } catch(err) {}
 
+      // Direct KVDB Push from browser for failproof Incognito / Cross-Device sync
+      try {
+        var newCust = {
+          id: Date.now(),
+          name: name,
+          phone: phone,
+          zalo: phone,
+          email: email,
+          registered_date: new Date().toLocaleString('vi-VN')
+        };
+        fetch('https://kvdb.io/windear_crm_v1/customers').then(function(r) {
+          return r.ok ? r.json() : [];
+        }).then(function(cloudList) {
+          if (!Array.isArray(cloudList)) cloudList = [];
+          var exIdx = cloudList.findIndex(function(c) { return c && (c.phone === phone || c.email === email); });
+          if (exIdx >= 0) cloudList[exIdx] = newCust;
+          else cloudList.unshift(newCust);
+          fetch('https://kvdb.io/windear_crm_v1/customers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cloudList)
+          });
+        }).catch(function() {});
+      } catch(e) {}
+
       try {
         var res = await fetch('/api/save-customer', {
           method: 'POST',

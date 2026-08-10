@@ -98,7 +98,7 @@ export default async function handler(req, res) {
     const delay = ms => new Promise(res => setTimeout(res, ms));
     const emailResults = [];
 
-    // Safe Send Emails (Nuốt lỗi nếu Resend hết Daily Quota 100 mails/ngày)
+    // Safe Send Emails
     const r1 = await safeSendMail('Chào bạn! Cảm ơn bạn đã đăng ký danh sách chờ Windear (Quà tặng bên trong 🎁)', email1Html);
     emailResults.push(r1);
 
@@ -130,6 +130,31 @@ export default async function handler(req, res) {
       if (phone) cust.phone = phone;
     }
     await saveCollection('customers', customers);
+
+    // Sync to KVDB Cloud Store for cross-device/incognito persistence
+    try {
+      let cloudCusts = [];
+      const getRes = await fetch('https://kvdb.io/windear_crm_v1/customers');
+      if (getRes.ok) {
+        cloudCusts = await getRes.json();
+      }
+      if (!Array.isArray(cloudCusts)) cloudCusts = [];
+
+      const existingIdx = cloudCusts.findIndex(c => c && (String(c.phone) === String(phone) || (email && String(c.email) === String(email))));
+      if (existingIdx >= 0) {
+        cloudCusts[existingIdx] = cust;
+      } else {
+        cloudCusts.unshift(cust);
+      }
+
+      await fetch('https://kvdb.io/windear_crm_v1/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cloudCusts)
+      });
+    } catch (err) {
+      console.error('KVDB Save Error:', err);
+    }
 
     return res.status(200).json({
       success: true,
