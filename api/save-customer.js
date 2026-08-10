@@ -82,30 +82,32 @@ export default async function handler(req, res) {
     </div>
     `;
 
-    async function sendMail(subj, html) {
-      const r = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: fromEmail, to: [email], subject: subj, html: html })
-      });
-      return r.json();
+    async function safeSendMail(subj, html) {
+      try {
+        const r = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: fromEmail, to: [email], subject: subj, html: html })
+        });
+        return await r.json();
+      } catch(e) {
+        return { error: e.message };
+      }
     }
 
     const delay = ms => new Promise(res => setTimeout(res, ms));
     const emailResults = [];
 
-    // Email 1
-    const r1 = await sendMail('Chào bạn! Cảm ơn bạn đã đăng ký danh sách chờ Windear (Quà tặng bên trong 🎁)', email1Html);
+    // Safe Send Emails (Nuốt lỗi nếu Resend hết Daily Quota 100 mails/ngày)
+    const r1 = await safeSendMail('Chào bạn! Cảm ơn bạn đã đăng ký danh sách chờ Windear (Quà tặng bên trong 🎁)', email1Html);
     emailResults.push(r1);
 
-    // Email 2
     await delay(1000);
-    const r2 = await sendMail('Mẹo nè: Tại sao banh lỗ tai ra nghe hoài mà tiếng Anh vẫn trôi tuột? 👂💨', email2Html);
+    const r2 = await safeSendMail('Mẹo nè: Tại sao banh lỗ tai ra nghe hoài mà tiếng Anh vẫn trôi tuột? 👂💨', email2Html);
     emailResults.push(r2);
 
-    // Email 3
     await delay(1000);
-    const r3 = await sendMail('Bắt tay vào trị dứt điểm nghe trôi tuột chữ với Ebook 4 Bước Luyện Tai (Chỉ 2.000đ) 📚⚡', email3Html);
+    const r3 = await safeSendMail('Bắt tay vào trị dứt điểm nghe trôi tuột chữ với Ebook 4 Bước Luyện Tai (Chỉ 2.000đ) 📚⚡', email3Html);
     emailResults.push(r3);
 
     // Lưu thông tin khách hàng mới vào Database
