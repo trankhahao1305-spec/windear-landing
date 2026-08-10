@@ -578,14 +578,40 @@
 
   async function saveCustomer(e) {
     e.preventDefault();
+    const name = document.getElementById('cust-name').value;
+    const phone = document.getElementById('cust-phone').value;
+    const zalo = document.getElementById('cust-zalo').value;
+    const email = document.getElementById('cust-email').value;
+
+    const newId = Date.now();
     const data = {
-      id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
-      name: document.getElementById('cust-name').value,
-      phone: document.getElementById('cust-phone').value,
-      zalo: document.getElementById('cust-zalo').value,
-      email: document.getElementById('cust-email').value,
+      id: newId,
+      name: name,
+      phone: phone,
+      zalo: zalo || phone,
+      email: email,
       registered_date: new Date().toLocaleString('vi-VN')
     };
+
+    // Gỡ bỏ khỏi danh sách đã xóa nếu thêm lại
+    let deletedIds = getStorage('windear_crm_deleted_customers', []).map(String);
+    deletedIds = deletedIds.filter(id => id !== String(newId) && id !== '1' && id !== '2' && id !== '3');
+    setStorage('windear_crm_deleted_customers', deletedIds);
+
+    // Gửi trực tiếp lên KVDB Cloud Store
+    try {
+      fetch('https://kvdb.io/windear_crm_v1/customers').then(r => r.ok ? r.json() : []).then(cloudList => {
+        if (!Array.isArray(cloudList)) cloudList = [];
+        const exIdx = cloudList.findIndex(c => c && (c.phone === phone || c.email === email));
+        if (exIdx >= 0) cloudList[exIdx] = data;
+        else cloudList.unshift(data);
+        fetch('https://kvdb.io/windear_crm_v1/customers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cloudList)
+        });
+      }).catch(() => {});
+    } catch(err) {}
 
     try {
       await fetch('/api/customers', {
@@ -598,7 +624,8 @@
     customers.unshift(data);
     setStorage('windear_crm_customers', customers);
     closeModal('customerModal');
-    await loadData();
+    renderCustomers();
+    document.getElementById('count-customers').innerText = customers.length;
     notifySync('CUSTOMERS_UPDATED');
   }
 
