@@ -374,15 +374,16 @@
       ];
 
       const map = new Map();
-      [...combined, ...defaultCustomers].forEach(c => {
+      // Put default seed customers first, then overwrite with local & API newly added customers
+      [...defaultCustomers, ...combined].forEach(c => {
         if (c && (c.phone || c.id || c.email)) {
           const key = c.phone || c.email || c.id;
-          if (!map.has(key)) map.set(key, c);
+          map.set(key, c);
         }
       });
 
       const deletedIds = getStorage('windear_crm_deleted_customers', []).map(String);
-      customers = Array.from(map.values()).filter(c => c && !deletedIds.includes(String(c.id)));
+      customers = Array.from(map.values()).reverse().filter(c => c && !deletedIds.includes(String(c.id)));
       setStorage('windear_crm_customers', customers);
 
       if (Array.isArray(ordRes) && ordRes.length > 0) {
