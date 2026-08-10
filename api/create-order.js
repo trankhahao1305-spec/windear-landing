@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const prod = products.find(p => p.id == product_id) || products[0];
 
     // Find or create customer
-    let cust = customers.find(c => c.phone === phone);
+    let cust = customers.find(c => (phone && c.phone === phone) || (email && c.email === email));
     if (!cust) {
       cust = {
         id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
@@ -32,35 +32,18 @@ export default async function handler(req, res) {
       customers.unshift(cust);
     } else {
       if (name) cust.name = name;
+      if (email) cust.email = email;
+    }
     await saveCollection('customers', customers);
 
-    // Sync to Cloud KV Store for cross-device CRM updates
-    try {
-      const resp = await fetch('https://kv.val.town/v1/windear_customers');
-      let cloudCusts = [];
-      if (resp.ok) cloudCusts = await resp.json();
-      if (!Array.isArray(cloudCusts)) cloudCusts = [];
-      const idx = cloudCusts.findIndex(c => c && (c.phone === phone || (email && c.email === email)));
-      if (idx >= 0) {
-        cloudCusts[idx] = cust;
-      } else {
-        cloudCusts.unshift(cust);
-      }
-      await fetch('https://kv.val.town/v1/windear_customers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cloudCusts)
-      });
-    } catch(e) {}
-
     const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
-    const amount = prod.price || 2000;
+    const amount = prod ? prod.price : 2000;
 
     const newOrder = {
       id: orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1,
       customer_id: cust.id,
-      product_id: prod.id,
-      product_name: prod.name,
+      product_id: prod ? prod.id : 1,
+      product_name: prod ? prod.name : "Ebook 4 Bước Luyện Tai",
       customer_name: name || cust.name,
       customer_phone: phone || cust.phone,
       amount: amount,
@@ -70,12 +53,10 @@ export default async function handler(req, res) {
     };
 
     // Inventory handling: only subtract stock if physical product
-    if (prod.type === 'physical') {
+    if (prod && prod.type === 'physical') {
       prod.stock = Math.max(0, (prod.stock || 0) - 1);
       await saveCollection('products', products);
       console.log(`📦 Trừ tồn kho sản phẩm vật lý ${prod.name}, còn ${prod.stock}`);
-    } else {
-      console.log(`✨ Sản phẩm số / Dịch vụ ${prod.name} không trừ tồn kho.`);
     }
 
     orders.unshift(newOrder);
@@ -87,7 +68,7 @@ export default async function handler(req, res) {
       order_code: randCode,
       amount: amount,
       status: 'pending',
-      product_name: prod.name
+      product_name: prod ? prod.name : "Ebook 4 Bước Luyện Tai"
     });
   } catch (err) {
     console.error('Lỗi create-order:', err);
