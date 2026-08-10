@@ -296,11 +296,18 @@
   } catch(e) {}
 
   async function testQuickSuccess() {
+    const name = document.getElementById('co-name') ? document.getElementById('co-name').value.trim() : '';
+    const email = document.getElementById('co-email') ? document.getElementById('co-email').value.trim() : '';
+
     try {
       await fetch('/api/manual-success-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ order_code: currentOrderCode })
+        body: JSON.stringify({ 
+          order_code: currentOrderCode,
+          customer_email: email || 'haotrankha53@gmail.com',
+          customer_name: name || 'Khách hàng'
+        })
       });
     } catch(e) {}
 

@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         product_name: product_name || 'Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ',
         amount: amount || 2000,
         status: 'success',
-        created_at: new Date().toLocaleString('vi-VN')
+        created_at: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
       };
       orders.unshift(order);
     } else {

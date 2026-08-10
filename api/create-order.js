@@ -27,7 +27,7 @@ export default async function handler(req, res) {
         phone: phone || '',
         zalo: phone || '',
         email: email || '',
-        registered_date: new Date().toLocaleString('vi-VN')
+        registered_date: new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
       };
       customers.unshift(cust);
     } else {
@@ -38,25 +38,26 @@ export default async function handler(req, res) {
 
     const randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
     const amount = prod ? prod.price : 2000;
+    const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
     const newOrder = {
       id: orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1,
       customer_id: cust.id,
       product_id: prod ? prod.id : 1,
-      product_name: prod ? prod.name : "Ebook 4 Bước Luyện Tai",
+      product_name: prod ? prod.name : "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ",
       customer_name: name || cust.name,
       customer_phone: phone || cust.phone,
+      customer_email: email || cust.email || '',
       amount: amount,
       status: 'pending',
       order_code: randCode,
-      created_at: new Date().toLocaleString('vi-VN')
+      created_at: vnTime
     };
 
     // Inventory handling: only subtract stock if physical product
     if (prod && prod.type === 'physical') {
       prod.stock = Math.max(0, (prod.stock || 0) - 1);
       await saveCollection('products', products);
-      console.log(`📦 Trừ tồn kho sản phẩm vật lý ${prod.name}, còn ${prod.stock}`);
     }
 
     orders.unshift(newOrder);
@@ -68,7 +69,7 @@ export default async function handler(req, res) {
       order_code: randCode,
       amount: amount,
       status: 'pending',
-      product_name: prod ? prod.name : "Ebook 4 Bước Luyện Tai"
+      product_name: prod ? prod.name : "Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ"
     });
   } catch (err) {
     console.error('Lỗi create-order:', err);
