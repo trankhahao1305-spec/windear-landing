@@ -154,6 +154,10 @@ class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
                 }
             })
 
+        # 1.b Notifications (initialized, cancelled, etc.)
+        elif method and method.startswith("notifications/"):
+            return self._send_json({"jsonrpc": "2.0", "id": req_id, "result": {}})
+
         # 2. MCP Protocol List Tools
         elif method == "tools/list":
             return self._send_json({
