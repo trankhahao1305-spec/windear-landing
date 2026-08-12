@@ -138,19 +138,100 @@ class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
         except Exception:
             body = {}
 
-        tool_name = body.get("tool") or body.get("method")
+        req_id = body.get("id", 1)
+        method = body.get("method") or body.get("tool")
         params = body.get("params", {})
 
-        if tool_name == "get_today_orders":
+        # 1. MCP Protocol Initialize
+        if method == "initialize":
+            return self._send_json({
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {"tools": {}},
+                    "serverInfo": {"name": "my-business", "version": "1.0.0"}
+                }
+            })
+
+        # 2. MCP Protocol List Tools
+        elif method == "tools/list":
+            return self._send_json({
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "tools": [
+                        {
+                            "name": "get_today_orders",
+                            "description": "Báo cáo đơn hàng và doanh thu trong ngày từ brain.db",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "date": {"type": "string", "description": "Ngày cần xem dạng YYYY-MM-DD"}
+                                }
+                            }
+                        },
+                        {
+                            "name": "update_landing_hero",
+                            "description": "Cập nhật tiêu đề H1 chính trên Landing Page index.html",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "new_headline": {"type": "string", "description": "Nội dung tiêu đề mới"}
+                                },
+                                "required": ["new_headline"]
+                            }
+                        },
+                        {
+                            "name": "send_customer_email",
+                            "description": "Gửi email chăm sóc hoặc thông báo cho khách hàng qua Resend API",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "to_email": {"type": "string", "description": "Email người nhận"},
+                                    "subject": {"type": "string", "description": "Tiêu đề email"},
+                                    "content": {"type": "string", "description": "Nội dung email"}
+                                },
+                                "required": ["to_email", "content"]
+                            }
+                        }
+                    ]
+                }
+            })
+
+        # 3. MCP Protocol Call Tool
+        elif method == "tools/call":
+            tool_name = params.get("name")
+            tool_args = params.get("arguments", {})
+            if tool_name == "get_today_orders":
+                res = mcp_get_today_orders(tool_args)
+            elif tool_name == "update_landing_hero":
+                res = mcp_update_landing_hero(tool_args)
+            elif tool_name == "send_customer_email":
+                res = mcp_send_customer_email(tool_args)
+            else:
+                res = {"status": "error", "message": f"Unknown tool {tool_name}"}
+
+            return self._send_json({
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "content": [{"type": "text", "text": json.dumps(res, ensure_ascii=False)}]
+                }
+            })
+
+        # Backward compatibility for direct tool invocations
+        elif method == "get_today_orders":
             return self._send_json(mcp_get_today_orders(params))
-        elif tool_name == "update_landing_hero":
+        elif method == "update_landing_hero":
             return self._send_json(mcp_update_landing_hero(params))
-        elif tool_name == "send_customer_email":
+        elif method == "send_customer_email":
             return self._send_json(mcp_send_customer_email(params))
         else:
             return self._send_json({
-                "error": "Unknown tool",
-                "available_tools": ["get_today_orders", "update_landing_hero", "send_customer_email"]
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "error": {"code": -32601, "message": f"Method {method} not found"}
             }, 400)
 
 if __name__ == "__main__":
