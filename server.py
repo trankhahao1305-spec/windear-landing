@@ -9,7 +9,7 @@ import time
 import threading
 from email_sender import send_email
 
-PORT = 8000
+PORT = int(os.environ.get("PORT", 8000))
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(DIRECTORY, "brain.db")
 WAITLIST_PATH = os.path.join(DIRECTORY, "waitlist.json")

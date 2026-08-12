@@ -1,4 +1,7 @@
 # Exclude SQLite local database files from Netlify static hosting
+.env
+.env.*
+!.env.example
 brain.db
 *.db
 server.py

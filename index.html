@@ -765,6 +765,23 @@
         return;
       }
 
+      var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      var phoneRegex = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/;
+
+      if (!emailRegex.test(email)) {
+        alert('Email không hợp lệ! Vui lòng kiểm tra lại định dạng email (ví dụ: name@gmail.com)');
+        isWaitlistSubmitting = false;
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.innerText = '🚀 Đăng ký Waitlist & Nhận Quà Ngay'; }
+        return;
+      }
+
+      if (!phoneRegex.test(phone.replace(/\s+/g, ''))) {
+        alert('Số điện thoại không hợp lệ! Vui lòng nhập SĐT Việt Nam gồm 10 chữ số (ví dụ: 0901234567)');
+        isWaitlistSubmitting = false;
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; submitBtn.innerText = '🚀 Đăng ký Waitlist & Nhận Quà Ngay'; }
+        return;
+      }
+
       var entry = {
         name: name,
         email: email,
