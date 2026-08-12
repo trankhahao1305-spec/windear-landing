@@ -154,6 +154,6 @@ class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
             }, 400)
 
 if __name__ == "__main__":
-    log(f"🚀 Windear MCP Server starting on http://127.0.0.1:{PORT}")
-    with socketserver.TCPServer(("127.0.0.1", PORT), MCPRequestHandler) as httpd:
+    log(f"🚀 Windear MCP Server starting on port {PORT}")
+    with socketserver.TCPServer(("", PORT), MCPRequestHandler) as httpd:
         httpd.serve_forever()
