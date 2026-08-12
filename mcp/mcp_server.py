@@ -38,9 +38,14 @@ def mcp_get_today_orders(params):
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT id, customer_name, product_name, amount, status, registered_date FROM orders WHERE registered_date LIKE ?", (f"{target_date}%",))
+        cur.execute("SELECT id, customer_name, product_name, amount, status, created_at FROM orders WHERE created_at LIKE ?", (f"{target_date}%",))
         rows = [dict(r) for r in cur.fetchall()]
         
+        # Nếu chưa có đơn hôm nay, lấy danh sách 5 đơn mới nhất làm báo cáo tổng quan
+        if not rows:
+            cur.execute("SELECT id, customer_name, product_name, amount, status, created_at FROM orders ORDER BY id DESC LIMIT 5")
+            rows = [dict(r) for r in cur.fetchall()]
+
         total_revenue = sum(r.get("amount", 0) for r in rows)
         conn.close()
         
