@@ -107,12 +107,47 @@ def mcp_send_customer_email(params):
     if send_email:
         html_body = f"<div><p>{content}</p></div>"
         success, res = send_email(to_email=to_email, subject=subject, html_content=html_body)
-        if success:
-            return {"status": "success", "message": f"Email sent successfully to {to_email}", "resend_id": res.get("id") if isinstance(res, dict) else res}
-        else:
-            return {"status": "error", "message": f"Failed to send email: {res}"}
-    else:
-        return {"status": "success", "message": f"[Simulated] Email to {to_email} with subject '{subject}' logged successfully."}
+# 4. Function get_recent_orders (Dùng cho thông báo đơn hàng mới tức thì)
+def mcp_get_recent_orders(params):
+    log(f"Executing tool 'get_recent_orders' with params: {params}")
+    limit = int(params.get("limit", 5))
+    if not os.path.exists(DB_PATH):
+        return {"status": "error", "message": f"Database file not found at {DB_PATH}"}
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, order_code, customer_name, customer_phone, product_name, amount, status, created_at FROM orders ORDER BY id DESC LIMIT ?", (limit,))
+        rows = [dict(r) for r in cur.fetchall()]
+        conn.close()
+        return {
+            "status": "success",
+            "count": len(rows),
+            "recent_orders": rows
+        }
+    except Exception as e:
+        log(f"Error in get_recent_orders: {e}")
+        return {"status": "error", "message": str(e)}
+
+# 5. Function get_recent_customers (Dùng cho thông báo lead mới điền form)
+def mcp_get_recent_customers(params):
+    log(f"Executing tool 'get_recent_customers' with params: {params}")
+    limit = int(params.get("limit", 5))
+    if not os.path.exists(DB_PATH):
+        return {"status": "error", "message": f"Database file not found at {DB_PATH}"}
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT id, name, phone, email, registered_date FROM customers ORDER BY id DESC LIMIT ?", (limit,))
+        rows = [dict(r) for r in cur.fetchall()]
+        conn.close()
+        return {
+            "status": "success",
+            "count": len(rows),
+            "recent_customers": rows
+        }
+    except Exception as e:
+        log(f"Error in get_recent_customers: {e}")
+        return {"status": "error", "message": str(e)}
 
 class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
     def _send_json(self, data, code=200):
@@ -181,6 +216,26 @@ class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
                             }
                         },
                         {
+                            "name": "get_recent_orders",
+                            "description": "Lấy danh sách các đơn hàng mới tạo gần đây nhất để gửi thông báo tức thì",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "limit": {"type": "integer", "description": "Số đơn hàng cần lấy (mặc định 5)"}
+                                }
+                            }
+                        },
+                        {
+                            "name": "get_recent_customers",
+                            "description": "Lấy danh sách khách hàng mới điền form/waitlist gần đây nhất",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {
+                                    "limit": {"type": "integer", "description": "Số lượng khách hàng cần lấy (mặc định 5)"}
+                                }
+                            }
+                        },
+                        {
                             "name": "update_landing_hero",
                             "description": "Cập nhật tiêu đề H1 chính trên Landing Page index.html",
                             "inputSchema": {
@@ -214,6 +269,10 @@ class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
             tool_args = params.get("arguments", {})
             if tool_name == "get_today_orders":
                 res = mcp_get_today_orders(tool_args)
+            elif tool_name == "get_recent_orders":
+                res = mcp_get_recent_orders(tool_args)
+            elif tool_name == "get_recent_customers":
+                res = mcp_get_recent_customers(tool_args)
             elif tool_name == "update_landing_hero":
                 res = mcp_update_landing_hero(tool_args)
             elif tool_name == "send_customer_email":
