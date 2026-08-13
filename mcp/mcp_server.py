@@ -149,6 +149,58 @@ def mcp_get_recent_customers(params):
         log(f"Error in get_recent_customers: {e}")
         return {"status": "error", "message": str(e)}
 
+# 6. Function get_unnotified_events (Lấy các đơn hàng & lead MỚI TINH chưa được thông báo)
+def mcp_get_unnotified_events(params):
+    log(f"Executing tool 'get_unnotified_events' with params: {params}")
+    if not os.path.exists(DB_PATH):
+        return {"status": "error", "message": f"Database file not found at {DB_PATH}"}
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Đảm bảo cột 'notified' tồn tại trong bảng orders và customers
+        try:
+            cur.execute("ALTER TABLE orders ADD COLUMN notified INTEGER DEFAULT 0")
+        except Exception:
+            pass
+        try:
+            cur.execute("ALTER TABLE customers ADD COLUMN notified INTEGER DEFAULT 0")
+        except Exception:
+            pass
+        conn.commit()
+
+        # 1. Lấy danh sách các đơn hàng chưa thông báo (notified = 0)
+        cur.execute("SELECT id, order_code, customer_name, customer_phone, product_name, amount, status, created_at FROM orders WHERE COALESCE(notified, 0) = 0")
+        new_orders = [dict(r) for r in cur.fetchall()]
+
+        # 2. Lấy danh sách khách hàng waitlist chưa thông báo (notified = 0)
+        cur.execute("SELECT id, name, phone, email, registered_date FROM customers WHERE COALESCE(notified, 0) = 0")
+        new_customers = [dict(r) for r in cur.fetchall()]
+
+        # 3. Cập nhật cờ notified = 1 để tránh thông báo trùng lặp lần sau
+        if new_orders:
+            order_ids = [str(o["id"]) for o in new_orders]
+            cur.execute(f"UPDATE orders SET notified = 1 WHERE id IN ({','.join(order_ids)})")
+
+        if new_customers:
+            cust_ids = [str(c["id"]) for c in new_customers]
+            cur.execute(f"UPDATE customers SET notified = 1 WHERE id IN ({','.join(cust_ids)})")
+
+        conn.commit()
+        conn.close()
+
+        return {
+            "status": "success",
+            "has_new_events": bool(new_orders or new_customers),
+            "total_new_orders": len(new_orders),
+            "total_new_customers": len(new_customers),
+            "new_orders": new_orders,
+            "new_customers": new_customers
+        }
+    except Exception as e:
+        log(f"Error in get_unnotified_events: {e}")
+        return {"status": "error", "message": str(e)}
+
 class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
     def _send_json(self, data, code=200):
         self.send_response(code)
@@ -258,6 +310,14 @@ class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
                                 },
                                 "required": ["to_email", "content"]
                             }
+                        },
+                        {
+                            "name": "get_unnotified_events",
+                            "description": "Lấy duy nhất các đơn hàng và khách hàng MỚI TINH chưa từng được thông báo qua Telegram (tự động gắn cờ đã thông báo để không bị nhắn lặp lại)",
+                            "inputSchema": {
+                                "type": "object",
+                                "properties": {}
+                            }
                         }
                     ]
                 }
@@ -273,6 +333,8 @@ class MCPRequestHandler(http.server.BaseHTTPRequestHandler):
                 res = mcp_get_recent_orders(tool_args)
             elif tool_name == "get_recent_customers":
                 res = mcp_get_recent_customers(tool_args)
+            elif tool_name == "get_unnotified_events":
+                res = mcp_get_unnotified_events(tool_args)
             elif tool_name == "update_landing_hero":
                 res = mcp_update_landing_hero(tool_args)
             elif tool_name == "send_customer_email":
