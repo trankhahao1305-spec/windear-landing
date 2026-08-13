@@ -686,12 +686,24 @@
   async function clearAllCustomers() {
     if (!confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TẤT CẢ khách hàng & đơn hàng để làm mới lại từ đầu không?')) return;
     try {
-      await fetch('/api/clear-all-customers', { method: 'POST' });
-      localStorage.removeItem('windear_crm_customers');
-      localStorage.removeItem('windear_crm_orders');
-      customers = [];
-      orders = [];
-    } catch(e) {}
+      const res = await fetch('/api/clear-all-customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clear_all' })
+      });
+      if (res.ok) {
+        console.log('✅ Server database cleared');
+      }
+    } catch(e) {
+      console.error('Lỗi gọi clear-all-customers:', e);
+    }
+
+    localStorage.removeItem('windear_crm_customers');
+    localStorage.removeItem('windear_crm_orders');
+    localStorage.removeItem('windear_crm_deleted_customers');
+    customers = [];
+    orders = [];
+
     await loadData();
     notifySync('DATA_DELETED');
     alert('✅ Đã xóa sạch toàn bộ thông tin khách hàng! Bạn có thể bắt đầu tạo thử nghiệm mới.');

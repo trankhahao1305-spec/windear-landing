@@ -309,6 +309,30 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
 
         elif path == '/api/customers':
             conn = get_db()
+            cur = conn.cursor()
+            
+            # Tự động đồng bộ các lượt đăng ký từ form waitlist vào Database
+            if os.path.exists(WAITLIST_PATH):
+                try:
+                    with open(WAITLIST_PATH, 'r', encoding='utf-8') as f:
+                        w_list = json.load(f)
+                    for w in w_list:
+                        w_phone = w.get("phone", "")
+                        w_name = w.get("name", "")
+                        w_email = w.get("email", "")
+                        w_date = w.get("registered_date") or w.get("timestamp") or time.strftime('%Y-%m-%d %H:%M:%S')
+                        if w_phone or w_email:
+                            cur.execute('''
+                                INSERT INTO customers (name, phone, zalo, email, registered_date)
+                                VALUES (?, ?, ?, ?, ?)
+                                ON CONFLICT(phone) DO UPDATE SET
+                                    name=excluded.name,
+                                    email=excluded.email
+                            ''', (w_name, w_phone, w_phone, w_email, w_date))
+                    conn.commit()
+                except Exception as e:
+                    print("⚠️ Error syncing waitlist to DB:", e)
+                    
             rows = conn.execute("SELECT * FROM customers ORDER BY id DESC").fetchall()
             conn.close()
             return self._send_json([dict(r) for r in rows])
