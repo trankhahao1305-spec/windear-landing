@@ -550,19 +550,24 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             conn = get_db()
             cur = conn.cursor()
             ord_item = conn.execute("SELECT * FROM orders WHERE order_code = ? OR id = ?", (order_code, order_code)).fetchone()
-            cur.execute("UPDATE orders SET status = 'success' WHERE order_code = ? OR id = ?", (order_code, order_code))
-            conn.commit()
             
             if ord_item:
+                cur.execute("UPDATE orders SET status = 'success' WHERE id = ?", (ord_item["id"],))
+                conn.commit()
+                
                 cust_id = ord_item["customer_id"]
                 cust = conn.execute("SELECT * FROM customers WHERE id = ?", (cust_id,)).fetchone() if cust_id else None
                 email = (cust["email"] if cust else None) or body.get("customer_email")
                 cust_name = (cust["name"] if cust else None) or ord_item["customer_name"]
+                
                 if email:
                     send_order_confirmation_email(ord_item["order_code"], cust_name, email, ord_item["product_name"], ord_item["amount"])
-            
+                
+                print(f"⚡ [Thủ công] Đã kích hoạt đơn hàng {ord_item['order_code']} ({cust_name}) ➡️ SUCCESS và gửi email!")
+            else:
+                print(f"⚠️ Không tìm thấy đơn hàng {order_code} để kích hoạt!")
+
             conn.close()
-            print(f"⚡ [Thủ công] Đã kích hoạt đơn hàng {order_code} ➡️ SUCCESS bằng tay và gửi email xác nhận!")
             return self._send_json({"success": True})
 
         # 4. Thêm sản phẩm từ Admin

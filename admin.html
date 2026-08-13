@@ -691,36 +691,22 @@
   }
 
   async function triggerManualSuccess(orderCode) {
-    const ord = orders.find(o => o.order_code === orderCode || o.id == orderCode);
-    if (ord) {
-      ord.status = 'success';
-      setStorage('windear_crm_orders', orders);
-      renderOrders();
-    }
-
-    const cust = customers.find(c => ord && (c.id == ord.customer_id || c.phone === ord.customer_phone));
-    const targetMail = (cust ? cust.email : '') || (ord ? ord.customer_email : '') || 'haotrankha53@gmail.com';
-
-    const payload = {
-      order_code: orderCode,
-      customer_name: ord ? ord.customer_name : 'Khách hàng',
-      customer_phone: ord ? ord.customer_phone : '',
-      customer_email: targetMail,
-      product_name: ord ? ord.product_name : 'Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ',
-      amount: ord ? ord.amount : 2000
-    };
-
-    console.log('⚡ [Manual Success] Kích hoạt và gửi email bàn giao tới:', payload);
-
     try {
       await fetch('/api/manual-success-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ order_code: orderCode })
       });
     } catch(e) {}
 
-    await loadData();
+    // Reload latest orders directly from DB
+    const res = await fetch('/api/orders');
+    if (res.ok) {
+      orders = await res.json();
+      setStorage('windear_crm_orders', orders);
+    }
+
+    renderOrders();
     notifySync('ORDER_ACTIVATED', { order_code: orderCode });
   }
 
