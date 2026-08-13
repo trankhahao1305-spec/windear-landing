@@ -189,9 +189,21 @@ def mcp_get_unnotified_events(params):
         conn.commit()
         conn.close()
 
+        summary_text = ""
+        if new_customers:
+            names = ", ".join([f"{c.get('name')} ({c.get('phone')})" for c in new_customers])
+            summary_text += f"Khách hàng mới: {names}. "
+        if new_orders:
+            orders_str = ", ".join([f"{o.get('customer_name')} ({o.get('product_name')} - {o.get('amount')}đ)" for o in new_orders])
+            summary_text += f"Đơn hàng mới: {orders_str}."
+
+        if not summary_text:
+            summary_text = "Không có đơn hàng hoặc khách hàng mới nào."
+
         return {
             "status": "success",
             "has_new_events": bool(new_orders or new_customers),
+            "summary": summary_text,
             "total_new_orders": len(new_orders),
             "total_new_customers": len(new_customers),
             "new_orders": new_orders,
