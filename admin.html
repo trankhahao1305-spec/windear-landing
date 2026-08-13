@@ -683,30 +683,19 @@
   async function deleteItem(table, id) {
     if (!confirm('Bạn có chắc muốn xóa bản ghi #' + id + '?')) return;
 
+    let url = '/api/' + table + '?id=' + encodeURIComponent(id);
+    if (table === 'customers') {
+      const cust = customers.find(c => String(c.id) === String(id));
+      if (cust) {
+        if (cust.phone) url += '&phone=' + encodeURIComponent(cust.phone);
+        if (cust.email) url += '&email=' + encodeURIComponent(cust.email);
+      }
+    }
+
     try {
-      await fetch('/api/' + table + '?id=' + id, {
-        method: 'DELETE'
-      });
+      await fetch(url, { method: 'DELETE' });
     } catch(e) {}
 
-    if (table === 'products') {
-      products = products.filter(p => p.id !== id);
-      setStorage('windear_crm_products', products);
-    }
-    if (table === 'customers') {
-      const deletedIds = getStorage('windear_crm_deleted_customers', []).map(String);
-      if (!deletedIds.includes(String(id))) deletedIds.push(String(id));
-      setStorage('windear_crm_deleted_customers', deletedIds);
-
-      customers = customers.filter(c => String(c.id) !== String(id));
-      setStorage('windear_crm_customers', customers);
-      renderCustomers();
-      document.getElementById('count-customers').innerText = customers.length;
-    }
-    if (table === 'orders') {
-      orders = orders.filter(o => o.id !== id);
-      setStorage('windear_crm_orders', orders);
-    }
     await loadData();
     notifySync('DATA_DELETED');
   }

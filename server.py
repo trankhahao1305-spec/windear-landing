@@ -651,22 +651,32 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
         if path == '/api/products':
             cur.execute("DELETE FROM products WHERE id = ?", (item_id,))
         elif path == '/api/customers':
-            cust = conn.execute("SELECT * FROM customers WHERE id = ?", (item_id,)).fetchone()
-            if cust:
-                c_phone = cust["phone"]
-                c_email = cust["email"]
-                cur.execute("DELETE FROM customers WHERE id = ? OR (phone = ? AND phone != '')", (item_id, c_phone))
-                if os.path.exists(WAITLIST_PATH) and c_phone:
-                    try:
-                        with open(WAITLIST_PATH, "r", encoding="utf-8") as f:
-                            w_list = json.load(f)
-                        w_list = [w for w in w_list if w.get("phone") != c_phone and w.get("email") != c_email]
-                        with open(WAITLIST_PATH, "w", encoding="utf-8") as f:
-                            json.dump(w_list, f, ensure_ascii=False, indent=2)
-                    except Exception:
-                        pass
-            else:
-                cur.execute("DELETE FROM customers WHERE id = ?", (item_id,))
+            c_phone = params.get('phone', [None])[0]
+            c_email = params.get('email', [None])[0]
+            
+            # Xóa khỏi SQLite DB bằng cả ID, số điện thoại hoặc email
+            cur.execute("""
+                DELETE FROM customers 
+                WHERE id = ? 
+                   OR (phone = ? AND phone IS NOT NULL AND phone != '') 
+                   OR (email = ? AND email IS NOT NULL AND email != '')
+            """, (item_id, c_phone, c_email))
+
+            # Xóa triệt để khỏi file waitlist.json
+            if os.path.exists(WAITLIST_PATH):
+                try:
+                    with open(WAITLIST_PATH, "r", encoding="utf-8") as f:
+                        w_list = json.load(f)
+                    w_list = [
+                        w for w in w_list 
+                        if str(w.get("id")) != str(item_id) 
+                        and (not c_phone or w.get("phone") != c_phone) 
+                        and (not c_email or w.get("email") != c_email)
+                    ]
+                    with open(WAITLIST_PATH, "w", encoding="utf-8") as f:
+                        json.dump(w_list, f, ensure_ascii=False, indent=2)
+                except Exception as e:
+                    print("⚠️ Error updating waitlist.json:", e)
         elif path == '/api/orders':
             cur.execute("DELETE FROM orders WHERE id = ?", (item_id,))
         conn.commit()
