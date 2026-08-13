@@ -523,6 +523,9 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
                 cur.execute("UPDATE orders SET status = 'success' WHERE id = ?", (matched_order["id"],))
                 conn.commit()
                 print(f"✅ [SePay Webhook] Đơn hàng {matched_order['order_code']} đã chuyển từ PENDING ➡️ SUCCESS!")
+                cust = conn.execute("SELECT * FROM customers WHERE id = ?", (matched_order["customer_id"],)).fetchone() if matched_order["customer_id"] else None
+                if cust and cust["email"]:
+                    send_order_confirmation_email(matched_order["order_code"], matched_order["customer_name"], cust["email"], matched_order["product_name"], matched_order["amount"])
                 conn.close()
                 return self._send_json({"success": True, "message": f"Order {matched_order['order_code']} activated"})
             else:
@@ -532,6 +535,9 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
                     cur.execute("UPDATE orders SET status = 'success' WHERE id = ?", (latest_pending["id"],))
                     conn.commit()
                     print(f"✅ [SePay Webhook] Đã tự động kích hoạt đơn hàng gần nhất {latest_pending['order_code']} ➡️ SUCCESS!")
+                    cust = conn.execute("SELECT * FROM customers WHERE id = ?", (latest_pending["customer_id"],)).fetchone() if latest_pending["customer_id"] else None
+                    if cust and cust["email"]:
+                        send_order_confirmation_email(latest_pending["order_code"], latest_pending["customer_name"], cust["email"], latest_pending["product_name"], latest_pending["amount"])
                     conn.close()
                     return self._send_json({"success": True, "message": "Updated latest pending order"})
 
@@ -543,10 +549,20 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             order_code = body.get('order_code')
             conn = get_db()
             cur = conn.cursor()
+            ord_item = conn.execute("SELECT * FROM orders WHERE order_code = ? OR id = ?", (order_code, order_code)).fetchone()
             cur.execute("UPDATE orders SET status = 'success' WHERE order_code = ? OR id = ?", (order_code, order_code))
             conn.commit()
+            
+            if ord_item:
+                cust_id = ord_item["customer_id"]
+                cust = conn.execute("SELECT * FROM customers WHERE id = ?", (cust_id,)).fetchone() if cust_id else None
+                email = (cust["email"] if cust else None) or body.get("customer_email")
+                cust_name = (cust["name"] if cust else None) or ord_item["customer_name"]
+                if email:
+                    send_order_confirmation_email(ord_item["order_code"], cust_name, email, ord_item["product_name"], ord_item["amount"])
+            
             conn.close()
-            print(f"⚡ [Thủ công] Đã kích hoạt đơn hàng {order_code} ➡️ SUCCESS bằng tay!")
+            print(f"⚡ [Thủ công] Đã kích hoạt đơn hàng {order_code} ➡️ SUCCESS bằng tay và gửi email xác nhận!")
             return self._send_json({"success": True})
 
         # 4. Thêm sản phẩm từ Admin
