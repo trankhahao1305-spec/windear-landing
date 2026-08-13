@@ -651,7 +651,22 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
         if path == '/api/products':
             cur.execute("DELETE FROM products WHERE id = ?", (item_id,))
         elif path == '/api/customers':
-            cur.execute("DELETE FROM customers WHERE id = ?", (item_id,))
+            cust = conn.execute("SELECT * FROM customers WHERE id = ?", (item_id,)).fetchone()
+            if cust:
+                c_phone = cust["phone"]
+                c_email = cust["email"]
+                cur.execute("DELETE FROM customers WHERE id = ? OR (phone = ? AND phone != '')", (item_id, c_phone))
+                if os.path.exists(WAITLIST_PATH) and c_phone:
+                    try:
+                        with open(WAITLIST_PATH, "r", encoding="utf-8") as f:
+                            w_list = json.load(f)
+                        w_list = [w for w in w_list if w.get("phone") != c_phone and w.get("email") != c_email]
+                        with open(WAITLIST_PATH, "w", encoding="utf-8") as f:
+                            json.dump(w_list, f, ensure_ascii=False, indent=2)
+                    except Exception:
+                        pass
+            else:
+                cur.execute("DELETE FROM customers WHERE id = ?", (item_id,))
         elif path == '/api/orders':
             cur.execute("DELETE FROM orders WHERE id = ?", (item_id,))
         conn.commit()
