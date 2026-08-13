@@ -138,8 +138,11 @@
   <!-- TAB 2: KHÁCH HÀNG -->
   <div id="tab-customers" class="tab-pane" style="display: none;">
     <div class="action-bar">
-      <h3>Danh sách Khách Hàng (Import từ waitlist.json)</h3>
-      <button class="btn btn-primary" onclick="openCustomerModal()">+ Thêm Khách Hàng</button>
+      <h3>Danh sách Khách Hàng Real-time (SQLite Database & Waitlist)</h3>
+      <div>
+        <button class="btn btn-danger" style="margin-right: 8px;" onclick="clearAllCustomers()">🧹 Xóa TẤT CẢ Khách Hàng (Reset DB)</button>
+        <button class="btn btn-primary" onclick="openCustomerModal()">+ Thêm Khách Hàng</button>
+      </div>
     </div>
     <div class="table-container">
       <table>
@@ -678,6 +681,20 @@
 
     renderOrders();
     notifySync('ORDER_ACTIVATED', { order_code: orderCode });
+  }
+
+  async function clearAllCustomers() {
+    if (!confirm('⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TẤT CẢ khách hàng & đơn hàng để làm mới lại từ đầu không?')) return;
+    try {
+      await fetch('/api/clear-all-customers', { method: 'POST' });
+      localStorage.removeItem('windear_crm_customers');
+      localStorage.removeItem('windear_crm_orders');
+      customers = [];
+      orders = [];
+    } catch(e) {}
+    await loadData();
+    notifySync('DATA_DELETED');
+    alert('✅ Đã xóa sạch toàn bộ thông tin khách hàng! Bạn có thể bắt đầu tạo thử nghiệm mới.');
   }
 
   async function deleteItem(table, id) {

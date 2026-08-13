@@ -633,7 +633,22 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             if cust and dict(cust).get("email"):
                 send_order_confirmation_email(rand_code, cust["name"], cust["email"], prod["name"] if prod else "", amount)
 
-            return self._send_json({"success": True})
+        elif path == '/api/clear-all-customers':
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM customers")
+            cur.execute("DELETE FROM orders")
+            conn.commit()
+            conn.close()
+            
+            if os.path.exists(WAITLIST_PATH):
+                try:
+                    with open(WAITLIST_PATH, "w", encoding="utf-8") as f:
+                        json.dump([], f)
+                except Exception as e:
+                    print("⚠️ Error resetting waitlist.json:", e)
+            print("🧹 [Admin] Đã xóa sạch toàn bộ dữ liệu khách hàng & đơn hàng!")
+            return self._send_json({"success": True, "message": "All customers cleared"})
 
         return self._send_json({"error": "Not Found"}, 404)
 
