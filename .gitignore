@@ -1,11 +1,3 @@
-# Exclude SQLite local database files from Netlify static hosting
 .env
-.env.*
-!.env.example
-brain.db
-*.db
-server.py
-__pycache__/
-.DS_Store
-
-.vercel
+facebook_tokens_result.json
+generated_image.png
