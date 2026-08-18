@@ -119,8 +119,12 @@
 
     <div class="status-box">
       <div class="spinner"></div>
-      <span>Đang chờ hệ thống SePay xác nhận...</span>
+      <span>Đang chờ hệ thống SePay xác nhận tự động...</span>
     </div>
+
+    <button onclick="checkNowManually()" style="margin-top: 16px; background: rgba(6,182,212,0.15); color: #06B6D4; border: 1px solid rgba(6,182,212,0.4); padding: 10px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%;">
+      ⚡ Tôi Đã Chuyển Khoản Xong (Kiểm Tra Ngay)
+    </button>
   </div>
 </div>
 
@@ -138,7 +142,6 @@
     btn.disabled = true;
     btn.innerText = 'Đang khởi tạo đơn hàng...';
 
-    const productId = 2; // Hardcode ID 2 cho Ebook
     const name = document.getElementById('co-name').value.trim();
     const phone = document.getElementById('co-phone').value.trim();
     const email = document.getElementById('co-email').value.trim();
@@ -150,7 +153,14 @@
       const res = await fetch('/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: productId, name, phone, email })
+        body: JSON.stringify({ 
+          product_id: 1, 
+          product_name: "Cẩm Nang Luyện Tai 4 Bước (Ebook)",
+          amount: 2000,
+          name, 
+          phone, 
+          email 
+        })
       });
 
       if (res.ok) {
@@ -176,6 +186,22 @@
     document.getElementById('qr-code-text').innerText = randCode;
 
     startPolling(randCode);
+  }
+
+  async function checkNowManually() {
+    if (!currentOrderCode) return;
+    try {
+      const res = await fetch('/api/check-order-status?order_code=' + encodeURIComponent(currentOrderCode));
+      if (res.ok) {
+        const ord = await res.json();
+        if (ord && ord.status === 'success') {
+          if (pollInterval) clearInterval(pollInterval);
+          window.location.href = "/luyen-tai-4-buoc-cam-on.html?order=" + currentOrderCode;
+          return;
+        }
+      }
+      alert("Hệ thống ngân hàng đang đồng bộ trong ít giây, bạn vui lòng đợi chút nhé!");
+    } catch(e) {}
   }
 
   function startPolling(orderCode) {

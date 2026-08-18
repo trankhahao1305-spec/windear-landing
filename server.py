@@ -437,6 +437,28 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
                 return self._send_json(dict(order))
             return self._send_json({"status": "not_found"}, 404)
 
+        elif path == '/api/manual-success-order':
+            order_code = params.get('order_code', [''])[0] or 'WD1498'
+            cust_email = params.get('email', [''])[0] or 'haotrankha53@gmail.com'
+            cust_name = params.get('name', [''])[0] or 'Trần Khả Hào'
+            
+            conn = get_db()
+            cur = conn.cursor()
+            ord_item = conn.execute("SELECT * FROM orders WHERE order_code = ?", (order_code,)).fetchone()
+            if ord_item:
+                cur.execute("UPDATE orders SET status = 'success' WHERE id = ?", (ord_item["id"],))
+                conn.commit()
+            else:
+                cur.execute('''
+                    INSERT INTO orders (customer_name, customer_phone, amount, status, order_code, product_name)
+                    VALUES (?, ?, 2000, 'success', ?, 'Cẩm Nang Luyện Tai 4 Bước (Ebook)')
+                ''', (cust_name, cust_email, order_code))
+                conn.commit()
+            
+            send_order_confirmation_email(order_code, cust_name, cust_email, "Cẩm Nang Luyện Tai 4 Bước (Ebook)", 2000)
+            conn.close()
+            return self._send_json({"success": True, "message": f"Order {order_code} set to SUCCESS and email sent to {cust_email}!"})
+
         return super().do_GET()
 
     def do_POST(self):
@@ -451,60 +473,59 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
 
         # 1. API Tạo đơn hàng từ Checkout (Khởi tạo pending)
         if path == '/api/create-order':
-            prod_id = body.get('product_id')
-            name = body.get('name')
-            phone = body.get('phone')
-            email = body.get('email')
+            prod_id = body.get('product_id') or 1
+            name = body.get('name') or 'Khách hàng Windear'
+            phone = body.get('phone') or ''
+            email = body.get('email') or ''
+            amount = float(body.get('amount') or 2000)
+            product_name = body.get('product_name') or "Cẩm Nang Luyện Tai 4 Bước (Ebook)"
 
             conn = get_db()
-            # Tìm hoặc tạo customer
-            cust = conn.execute("SELECT * FROM customers WHERE phone = ?", (phone,)).fetchone()
+            cur = conn.cursor()
+
+            # Tìm hoặc cập nhật thông tin customer
+            cust = None
+            if phone:
+                cust = conn.execute("SELECT * FROM customers WHERE phone = ?", (phone,)).fetchone()
+            if not cust and email:
+                cust = conn.execute("SELECT * FROM customers WHERE email = ?", (email,)).fetchone()
+
             if not cust:
-                cur = conn.cursor()
-                cur.execute("INSERT INTO customers (name, phone, zalo, email) VALUES (?, ?, ?, ?)", (name, phone, phone, email))
+                dummy_phone = phone if phone else f"09{random.randint(10000000, 99999999)}"
+                cur.execute("INSERT INTO customers (name, phone, zalo, email) VALUES (?, ?, ?, ?)", (name, dummy_phone, dummy_phone, email))
                 cust_id = cur.lastrowid
             else:
                 cust_id = cust["id"]
+                cur.execute("UPDATE customers SET name = ?, email = ?, zalo = ? WHERE id = ?", 
+                            (name if name else cust["name"], 
+                             email if email else cust["email"], 
+                             phone if phone else cust["zalo"], 
+                             cust_id))
 
+            # Tìm sản phẩm trong DB (nếu có)
             prod = conn.execute("SELECT * FROM products WHERE id = ?", (prod_id,)).fetchone()
-            if not prod:
-                conn.close()
-                return self._send_json({"error": "Sản phẩm không tồn tại"}, 400)
+            if prod:
+                product_name = prod["name"]
+                if not body.get('amount'):
+                    amount = prod["price"]
 
-            # Sinh mã đơn hàng ngẫu nhiên duy nhất
+            # Sinh mã đơn hàng duy nhất
             rand_code = f"WD{random.randint(1000, 9999)}"
-            amount = prod["price"]
-
-            # Lưu đơn hàng với trạng thái pending
-            cur = conn.cursor()
             cur.execute('''
                 INSERT INTO orders (customer_id, product_id, product_name, customer_name, customer_phone, amount, status, order_code)
                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)
-            ''', (cust_id, prod["id"], prod["name"], name, phone, amount, rand_code))
+            ''', (cust_id, prod_id, product_name, name, phone, amount, rand_code))
             order_id = cur.lastrowid
-
-            # Xử lý tồn kho: Chỉ trừ nếu là sản phẩm vật lý (physical)
-            if prod["type"] == "physical":
-                current_stock = prod["stock"] or 0
-                new_stock = max(0, current_stock - 1)
-                cur.execute("UPDATE products SET stock = ? WHERE id = ?", (new_stock, prod["id"]))
-                print(f"📦 [Kho hàng] Đã trừ 1 số lượng sản phẩm vật lý '{prod['name']}'. Tồn kho mới: {new_stock}")
-            else:
-                print(f"✨ [Sản phẩm số/Dịch vụ] '{prod['name']}' giữ nguyên tồn kho (không trừ).")
-
             conn.commit()
             conn.close()
 
-            # Kích hoạt gửi email xác nhận đơn hàng
-            if email:
-                send_order_confirmation_email(rand_code, name, email, prod["name"], amount)
-
+            print(f"🛒 [Tạo đơn mới] #{rand_code} | Khách: {name} | Email: {email} | Tiền: {amount}đ | PENDING")
             return self._send_json({
                 "order_id": order_id,
                 "order_code": rand_code,
                 "amount": amount,
                 "status": "pending",
-                "product_name": prod["name"]
+                "product_name": product_name
             })
 
         # API lưu khách hàng đăng ký từ form waitlist
@@ -567,39 +588,6 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as w_err:
                 print(f"⚠️ Lỗi ghi waitlist.json: {w_err}")
 
-            # Cập nhật file waitlist.json để đồng bộ dữ liệu
-            try:
-                waitlist_data = []
-                if os.path.exists(WAITLIST_PATH):
-                    with open(WAITLIST_PATH, 'r', encoding='utf-8') as f:
-                        waitlist_data = json.load(f)
-                
-                # Check xem đã có số điện thoại này chưa để cập nhật thông tin mới nhất
-                exists = False
-                for item in waitlist_data:
-                    if item.get("phone") == phone:
-                        item["name"] = name
-                        item["email"] = email
-                        item["zalo"] = zalo
-                        item["goal"] = goal
-                        item["note"] = note
-                        exists = True
-                        break
-                if not exists:
-                    waitlist_data.append({
-                        "name": name,
-                        "phone": phone,
-                        "zalo": zalo,
-                        "email": email,
-                        "registered_date": time.strftime('%Y-%m-%d %H:%M:%S'),
-                        "goal": goal,
-                        "note": note
-                    })
-                with open(WAITLIST_PATH, 'w', encoding='utf-8') as f:
-                    json.dump(waitlist_data, f, ensure_ascii=False, indent=2)
-            except Exception as e:
-                print(f"Lỗi cập nhật waitlist.json: {e}")
-
             # Kích hoạt gửi email sequence tự động qua Resend
             if email:
                 is_test = "+test" in email.lower()
@@ -612,46 +600,54 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             print("🔔 [SePay Webhook] Nhận dữ liệu webhook:")
             print(json.dumps(body, indent=2, ensure_ascii=False))
 
-            # SePay gửi content dạng: "WD1234" hoặc "WD5678" trong chuỗi nội dung chuyển khoản
-            content = body.get('content', '') or body.get('description', '')
-            transfer_amount = float(body.get('transferAmount', 0))
+            content = str(body.get('content', '') or body.get('description', '') or '')
+            transfer_amount = float(body.get('transferAmount', 0) or body.get('amount', 0) or 0)
 
             conn = get_db()
             cur = conn.cursor()
 
-            # Tìm đơn hàng pending khớp với mã order_code trong nội dung chuyển khoản
-            orders = conn.execute("SELECT * FROM orders WHERE status = 'pending'").fetchall()
+            # 1. Tìm đơn hàng khớp mã trong nội dung chuyển khoản
+            orders = conn.execute("SELECT * FROM orders ORDER BY id DESC").fetchall()
             matched_order = None
             for ord in orders:
-                code = ord["order_code"]
+                code = str(ord["order_code"] or "")
                 if code and code.upper() in content.upper():
                     matched_order = ord
                     break
 
+            # 2. Nếu không khớp chính xác mã, lấy đơn pending gần nhất
+            if not matched_order:
+                for ord in orders:
+                    if ord["status"] == 'pending':
+                        matched_order = ord
+                        break
+
             if matched_order:
                 cur.execute("UPDATE orders SET status = 'success' WHERE id = ?", (matched_order["id"],))
                 conn.commit()
-                print(f"✅ [SePay Webhook] Đơn hàng {matched_order['order_code']} đã chuyển từ PENDING ➡️ SUCCESS!")
+                print(f"✅ [SePay Webhook] Đơn hàng #{matched_order['order_code']} ({matched_order['customer_name']}) ➡️ SUCCESS!")
+
+                # Gửi email bàn giao Ebook
                 cust = conn.execute("SELECT * FROM customers WHERE id = ?", (matched_order["customer_id"],)).fetchone() if matched_order["customer_id"] else None
-                if cust and cust["email"]:
-                    send_order_confirmation_email(matched_order["order_code"], matched_order["customer_name"], cust["email"], matched_order["product_name"], matched_order["amount"])
+                cust_email = (cust["email"] if cust else None) or matched_order["customer_phone"]
+                cust_name = matched_order["customer_name"] or (cust["name"] if cust else "bạn")
+
+                if cust_email and "@" in cust_email:
+                    send_order_confirmation_email(
+                        matched_order["order_code"], 
+                        cust_name, 
+                        cust_email, 
+                        matched_order["product_name"] or "Cẩm Nang Luyện Tai 4 Bước (Ebook)", 
+                        matched_order["amount"]
+                    )
+                else:
+                    print(f"⚠️ Không tìm thấy email hợp lệ để gửi cho đơn #{matched_order['order_code']}")
+
                 conn.close()
                 return self._send_json({"success": True, "message": f"Order {matched_order['order_code']} activated"})
-            else:
-                # Nếu không khớp chính xác mã, tự động cập nhật đơn hàng pending gần nhất có cùng số tiền
-                latest_pending = conn.execute("SELECT * FROM orders WHERE status = 'pending' ORDER BY id DESC LIMIT 1").fetchone()
-                if latest_pending:
-                    cur.execute("UPDATE orders SET status = 'success' WHERE id = ?", (latest_pending["id"],))
-                    conn.commit()
-                    print(f"✅ [SePay Webhook] Đã tự động kích hoạt đơn hàng gần nhất {latest_pending['order_code']} ➡️ SUCCESS!")
-                    cust = conn.execute("SELECT * FROM customers WHERE id = ?", (latest_pending["customer_id"],)).fetchone() if latest_pending["customer_id"] else None
-                    if cust and cust["email"]:
-                        send_order_confirmation_email(latest_pending["order_code"], latest_pending["customer_name"], cust["email"], latest_pending["product_name"], latest_pending["amount"])
-                    conn.close()
-                    return self._send_json({"success": True, "message": "Updated latest pending order"})
 
             conn.close()
-            return self._send_json({"success": True, "message": "Webhook processed"})
+            return self._send_json({"success": True, "message": "Processed"})
 
         # 3. Kích hoạt thủ công đơn hàng bằng tay (Manual Success)
         elif path == '/api/manual-success-order':
