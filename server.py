@@ -218,7 +218,7 @@ def send_email_sequence_thread(to_email, is_test=False):
 
 def send_order_confirmation_email(order_code, customer_name, customer_email, product_name, amount):
     """
-    Gửi email xác nhận đơn hàng tự động khi tạo đơn hàng mới.
+    Gửi email xác nhận đơn hàng tự động và bàn giao Ebook qua Resend API.
     """
     if not customer_email:
         print(f"⚠️ Không có email khách hàng cho đơn #{order_code}, bỏ qua gửi email xác nhận.")
@@ -231,32 +231,40 @@ def send_order_confirmation_email(order_code, customer_name, customer_email, pro
         formatted_amount = f"{amount} VNĐ"
 
     from_email = "Windear <hello@windear.online>"
-    subject = f"Xác nhận đơn hàng #{order_code} — Cảm ơn bạn đã mua hàng tại Windear! 🎉"
+    subject = f"[Xác Nhận Đơn Hàng #{order_code}] Bàn giao Ebook Luyện Tai 2K thành công! 📚⚡"
     
     html_content = f"""
-    <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; line-height: 1.6; color: #1E293B; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #E2E8F0; border-radius: 12px;">
-      <h2 style="color: #06B6D4; margin-top: 0;">Cảm ơn bạn {customer_name} nha! 🎉</h2>
-      <p>Tui từ <strong>Windear</strong> đây. Xác nhận hệ thống đã ghi nhận đơn hàng mới của bạn thành công rồi nhé!</p>
+    <div style="font-family: 'Plus Jakarta Sans', Arial, sans-serif; line-height: 1.6; color: #1E293B; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #E2E8F0; border-radius: 12px; background: #FFFFFF;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <span style="background: #10B981; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.85em;">🎉 XÁC NHẬN ĐƠN HÀNG THÀNH CÔNG</span>
+      </div>
+      <h2 style="color: #06B6D4; margin-top: 0; text-align: center;">Cảm ơn bạn đã tin tưởng Windear nha! 👋</h2>
+      <p>Chào bạn <strong>{customer_name or 'Trần Khả Hào'}</strong>,</p>
+      <p>Tui từ Windear đây! Hệ thống vừa ghi nhận đơn hàng của bạn đã thanh toán thành công qua Ngân hàng rồi nhé. Cảm ơn bạn rất nhiều vì đã đồng hành cùng Windear trên hành trình trị dứt điểm chứng nghe trôi chữ.</p>
       
-      <div style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 15px; margin: 20px 0;">
-        <h4 style="margin-top: 0; color: #0F172A; border-bottom: 1px solid #CBD5E1; padding-bottom: 8px;">📋 CHI TIẾT ĐƠN HÀNG #{order_code}</h4>
-        <p style="margin: 6px 0;"><strong>Sản phẩm:</strong> {product_name}</p>
-        <p style="margin: 6px 0;"><strong>Số tiền:</strong> <span style="color: #FF6B4A; font-weight: bold;">{formatted_amount}</span></p>
-        <p style="margin: 6px 0;"><strong>Mã đơn hàng:</strong> <code style="background: #E2E8F0; padding: 2px 6px; border-radius: 4px;">{order_code}</code></p>
+      <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 18px; margin: 20px 0;">
+        <p style="margin: 0 0 8px 0;">📦 <strong>Mã đơn hàng:</strong> <span style="color: #06B6D4; font-family: monospace; font-weight: bold;">#{order_code}</span></p>
+        <p style="margin: 0 0 8px 0;">📚 <strong>Sản phẩm:</strong> {product_name or 'Ebook 4 Bước Luyện Tai Chữa Dứt Điểm Nghe Trôi Chữ'}</p>
+        <p style="margin: 0;">💵 <strong>Số tiền:</strong> <span style="color: #FF6B4A; font-weight: bold;">{formatted_amount}</span></p>
       </div>
 
-      <h4 style="color: #0F172A;">📦 HƯỚNG DẪN NHẬN HÀNG & TRẢI NGHIỆM:</h4>
-      <ul style="padding-left: 20px;">
-        <li style="margin-bottom: 8px;"><strong>Sản phẩm số / Ebook:</strong> Bạn có thể mở tải file PDF trực tiếp từ trang xác nhận đơn hàng hoặc qua tài liệu đính kèm.</li>
-        <li style="margin-bottom: 8px;"><strong>Khóa Coaching 1-1:</strong> Đội ngũ Windear sẽ nhắn qua Zalo/SĐT để chốt lịch hẹn Zoom trong ít phút nữa.</li>
-        <li style="margin-bottom: 8px;"><strong>Tai nghe Windear:</strong> Đơn hàng sẽ được đóng gói và giao tới bạn trong 2-3 ngày làm việc.</li>
-      </ul>
+      <h3 style="color: #FF6B4A; margin-bottom: 10px;">📌 Hướng dẫn nhận hàng & sử dụng:</h3>
+      <ol style="padding-left: 20px; margin-top: 0;">
+        <li style="margin-bottom: 8px;">Bấm vào nút nhận file bên dưới để tải trực tiếp cuốn Ebook PDF bản chuẩn về máy.</li>
+        <li style="margin-bottom: 8px;">Đọc kỹ <strong>Lộ trình 4 Bước Luyện Tai</strong> ở Chương 1 để nắm quy trình tự xẻ nhỏ audio.</li>
+      </ol>
 
-      <p>Thật ra, đơn giản thôi, chúc bạn sẽ có những phút giây luyện tai siêu hiệu quả và sớm trị dứt điểm chứng nghe trôi chữ cùng Windear!</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="https://windear.online/Cam_nang_Luyen_tai_4_buoc.html" style="background: #FF6B4A; color: white; padding: 14px 28px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block; font-size: 1.05em; box-shadow: 0 4px 12px rgba(255, 107, 74, 0.3);">
+          📥 BẤM VÀO ĐÂY ĐỂ TẢI EBOOK VỀ MÁY
+        </a>
+      </div>
+
+      <p style="font-size: 0.95em; color: #475569;">Nếu bạn cần hỗ trợ thêm trong quá trình luyện tập, đừng ngần ngại reply trực tiếp email này hoặc nhắn tin qua Zalo hỗ trợ của Windear nhé!</p>
       
       <p style="margin-top: 30px; border-top: 1px solid #E2E8F0; padding-top: 15px; font-size: 0.9em; color: #64748B;">
         Thân mến,<br>
-        <strong>Tui từ Windear App</strong>
+        <strong>Khả Hào & Đội ngũ Windear English</strong>
       </p>
     </div>
     """
@@ -459,6 +467,9 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             conn.close()
             return self._send_json({"success": True, "message": f"Order {order_code} set to SUCCESS and email sent to {cust_email}!"})
 
+        elif path in ['/api/sepay-webhook', '/api/sepay-webhook/', '/api/sepay-webhook.js', '/api/sepay-webhook.js/', '/sepay-webhook']:
+            return self._send_json({"status": "ok", "message": "SePay webhook active"})
+
         return super().do_GET()
 
     def do_POST(self):
@@ -596,7 +607,7 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
             return self._send_json({"success": True})
 
         # 2. SePay Webhook nhận thanh toán tự động
-        elif path == '/api/sepay-webhook':
+        elif path in ['/api/sepay-webhook', '/api/sepay-webhook/', '/api/sepay-webhook.js', '/api/sepay-webhook.js/', '/sepay-webhook']:
             print("🔔 [SePay Webhook] Nhận dữ liệu webhook:")
             print(json.dumps(body, indent=2, ensure_ascii=False))
 
