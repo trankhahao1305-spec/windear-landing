@@ -318,8 +318,18 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
         elif path.startswith('/ke-hoach-kinh-doanh/'):
             subfile = path[len('/ke-hoach-kinh-doanh/'):]
             real_filepath = os.path.join(DIRECTORY, 'ke-hoach-kinh-doanh', subfile)
+            if not subfile.endswith('.md'):
+                self.path = '/ke-hoach-kinh-doanh/' + subfile
+                return super().do_GET()
         elif path.endswith('.md'):
-            real_filepath = os.path.join(DIRECTORY, path.lstrip('/'))
+            filename = path.lstrip('/')
+            # Tìm ở root hoặc trong ke-hoach-kinh-doanh
+            candidate1 = os.path.join(DIRECTORY, filename)
+            candidate2 = os.path.join(DIRECTORY, 'ke-hoach-kinh-doanh', filename)
+            if os.path.exists(candidate1):
+                real_filepath = candidate1
+            elif os.path.exists(candidate2):
+                real_filepath = candidate2
 
         if real_filepath and os.path.exists(real_filepath) and real_filepath.endswith('.md'):
             try:
