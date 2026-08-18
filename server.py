@@ -801,5 +801,7 @@ if __name__ == '__main__':
     print(f"🚀 Server Windear CRM & SePay đang chạy tại: http://localhost:{PORT}")
     print(f"📊 Trang Admin: http://localhost:{PORT}/admin")
     print(f"💳 Trang Thanh Toán: http://localhost:{PORT}/thanh-toan")
+    print(f"📑 Trang Kế Hoạch ASSP: http://localhost:{PORT}/ke-hoach")
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", PORT), WindearAppHandler) as httpd:
         httpd.serve_forever()
