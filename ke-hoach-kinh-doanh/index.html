@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bản Kế Hoạch Kinh Doanh & Phễu ASSP 12 Agents — Windear English</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B1120;
+      --card-bg: #1E293B;
+      --card-border: #334155;
+      --primary: #06B6D4;
+      --primary-hover: #0891B2;
+      --accent: #FF6B4A;
+      --success: #10B981;
+      --purple: #8B5CF6;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --header-font: 'Playfair Display', Georgia, serif;
+      --body-font: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--body-font); line-height: 1.6; padding-top: 70px; }
+
+    /* TOPBAR NAV */
+    .topbar { position: fixed; top: 0; left: 0; right: 0; height: 70px; background: rgba(11, 17, 32, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--card-border); z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+    .brand-logo { font-size: 18px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .brand-logo span { color: var(--primary); }
+    .nav-links { display: flex; gap: 14px; overflow-x: auto; padding: 4px 0; }
+    .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; transition: 0.2s; padding: 6px 10px; border-radius: 6px; }
+    .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+    /* LAYOUT */
+    .container { max-width: 1080px; margin: 0 auto; padding: 40px 20px; }
+    section { margin-bottom: 70px; scroll-margin-top: 90px; }
+
+    /* TYPOGRAPHY */
+    h1, h2, h3 { font-family: var(--header-font); }
+    .section-header { margin-bottom: 24px; }
+    .section-tag { display: inline-block; font-family: var(--body-font); font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; margin-bottom: 6px; }
+    .section-title { font-size: 28px; font-weight: 900; color: #fff; }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--body-font); font-size: 14px; font-weight: 700; padding: 12px 20px; border-radius: 10px; text-decoration: none; cursor: pointer; transition: all 0.2s; border: none; }
+    .btn-primary { background: var(--primary); color: #0B1120; }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(6,182,212,0.3); }
+    .btn-outline { background: rgba(6,182,212,0.1); color: var(--primary); border: 1px solid rgba(6,182,212,0.3); }
+    .btn-outline:hover { background: var(--primary); color: #0B1120; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    /* SECTION 1: HERO */
+    .hero-box { text-align: center; padding: 60px 20px; background: radial-gradient(circle at 50% 20%, rgba(6,182,212,0.15), transparent 70%); border: 1px solid var(--card-border); border-radius: 24px; margin-bottom: 50px; }
+    .hero-badge { display: inline-block; background: rgba(6,182,212,0.15); color: var(--primary); padding: 6px 18px; border-radius: 99px; font-weight: 800; font-size: 13px; margin-bottom: 20px; border: 1px solid rgba(6,182,212,0.3); }
+    .hero-title { font-size: 40px; font-weight: 900; margin-bottom: 16px; line-height: 1.2; }
+    .hero-tagline { font-size: 20px; color: #E2E8F0; font-style: italic; max-width: 750px; margin: 0 auto 24px; line-height: 1.5; }
+    .hero-meta { display: flex; justify-content: center; gap: 24px; color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
+    .hero-meta strong { color: #fff; }
+
+    /* CARDS & GRIDS */
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 28px; transition: 0.2s; }
+    .card:hover { border-color: var(--primary); }
+
+    /* SECTION 2: AVATAR & SECTION 3: VOICE */
+    .quote-box { background: #0F172A; border-left: 4px solid var(--primary); padding: 18px 20px; border-radius: 0 12px 12px 0; margin: 16px 0; font-style: italic; color: #CBD5E1; font-size: 14px; }
+    
+    /* SECTION 4: HERO MECHANISM */
+    .mechanism-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 20px 0; }
+    .m-step { background: #0F172A; border: 1px solid var(--card-border); border-radius: 14px; padding: 18px; text-align: center; }
+    .m-step-num { width: 36px; height: 36px; background: var(--primary); color: #0B1120; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; margin: 0 auto 10px; }
+    .m-step h4 { font-family: var(--body-font); font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+    .m-step p { font-size: 12px; color: var(--text-muted); }
+
+    /* SECTION 5: MONEY MODEL & VALUE STACK */
+    .offer-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    .offer-table th, .offer-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--card-border); }
+    .offer-table th { background: #0F172A; color: var(--text-muted); font-weight: 700; }
+    .price-highlight { color: var(--accent); font-weight: 800; font-size: 18px; }
+
+    /* SECTION 7: FULL FUNNEL ASSETS GRID */
+    .assets-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .asset-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+    .asset-card h4 { font-family: var(--body-font); font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #fff; }
+    .asset-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; flex-grow: 1; }
+
+    /* SECTION 8: ROADMAP 90 NGÀY TIMELINE */
+    .timeline { position: relative; border-left: 2px solid var(--card-border); margin-left: 20px; padding-left: 24px; display: flex; flex-direction: column; gap: 24px; }
+    .timeline-item { position: relative; }
+    .timeline-item::before { content: ''; position: absolute; left: -31px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); border: 2px solid var(--bg); }
+    .timeline-title { font-weight: 800; font-size: 16px; color: var(--primary); margin-bottom: 4px; }
+    .timeline-desc { font-size: 14px; color: var(--text-muted); }
+
+    /* SECTION 9: TỰ VẤN */
+    .self-reflect-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .reflect-box { background: #0F172A; border: 1px solid var(--card-border); border-radius: 16px; padding: 24px; }
+    .reflect-box h4 { font-family: var(--body-font); font-size: 16px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 50px 20px; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 14px; }
+
+    @media (max-width: 768px) {
+      .hero-title { font-size: 28px; }
+      .topbar { padding: 0 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR NAVIGATION (9 ANCHORS) -->
+  <nav class="topbar">
+    <div class="brand-logo">WINDEAR <span>PITCH</span></div>
+    <div class="nav-links">
+      <a href="#hero">1. Hero</a>
+      <a href="#avatar">2. Avatar</a>
+      <a href="#brand-voice">3. Voice</a>
+      <a href="#hero-mechanism">4. Mechanism</a>
+      <a href="#money-model">5. Offer</a>
+      <a href="#funnel">6. Funnel</a>
+      <a href="#assets">7. Assets</a>
+      <a href="#roadmap">8. Roadmap</a>
+      <a href="#self-reflection">9. Tự Vấn</a>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- SECTION 1: HERO -->
+    <section id="hero">
+      <div class="hero-box">
+        <span class="hero-badge">ASSP 12-AGENT FRAMEWORK · PITCH HUB</span>
+        <h1 class="hero-title">Bản Kế Hoạch Kinh Doanh — Windear English</h1>
+        <p class="hero-tagline">"Không phải tai bạn kém — do não chưa bật chế độ bắt sóng Windear!"</p>
+        <div class="hero-meta">
+          <div>👤 Tác giả: <strong>Trần Khả Hào</strong></div>
+          <div>📅 Ngày tạo: <strong>18/08/2026</strong></div>
+          <div>🎯 Mục tiêu: <strong>300 - 500 Triệu / Năm</strong></div>
+        </div>
+        <a href="#avatar" class="btn btn-primary">🚀 Bắt Đầu Khám Phá Kế Hoạch</a>
+      </div>
+    </section>
+
+    <!-- SECTION 2: AVATAR -->
+    <section id="avatar">
+      <div class="section-header">
+        <span class="section-tag">Agent 01 · Avatar Builder</span>
+        <h2 class="section-title">2. Chân Dung Khách Hàng Mục Tiêu (Tuấn & Hương)</h2>
+      </div>
+      <div class="card">
+        <p>Tuấn (27t, Kỹ sư IT) và Hương (23t, Dân văn phòng) đã học ngữ pháp 10 năm, đọc tài liệu hiểu nhưng khi vào cuộc họp Zoom với sếp Tây hoặc xem phim thì não bị "đơ" hoàn toàn. Họ bị trễ nhịp do thói quen vừa nghe vừa dịch sang tiếng Việt và bị sập bẫy trước tốc độ nuốt âm 70% của người bản xứ.</p>
+        <div class="quote-box">
+          "Banh lỗ tai ra nghe hoài mà chữ vẫn trôi tuột... Vừa nghe vừa dịch mệt não dã man, không kịp thở luôn!"
+        </div>
+        <a href="01-avatar.md" class="btn btn-outline" target="_blank">📄 View Full Avatar (01-avatar.md)</a>
+      </div>
+    </section>
+
+    <!-- SECTION 3: BRAND VOICE -->
+    <section id="brand-voice">
+      <div class="section-header">
+        <span class="section-tag">Agent 02 · Brand Voice Builder</span>
+        <h2 class="section-title">3. Phong Cách Giọng Văn Thương Hiệu (Brand Voice)</h2>
+      </div>
+      <div class="card">
+        <p>Hình mẫu <strong>The Real Companion (Người bạn đồng hành thực chiến)</strong>. Xưng hô chuẩn mực: <strong>Tui – Bạn</strong>. Tông giọng trực diện, đồng cảm sâu sắc, nói thẳng vào điểm nghẽn chứ không dùng thuật ngữ ngôn ngữ học hàn lâm hay văn phong 'kính thưa' sáo rỗng.</p>
+        <div class="quote-box">
+          "Dạ tui từ Windear đây! Mẹo nè: Tại sao bạn luyện nghe hoài mà não vẫn đơ? Đơn giản thôi, vì người Mỹ nuốt âm chứ tai bạn hổng có dốt!"
+        </div>
+        <a href="02-brand-voice.md" class="btn btn-outline" target="_blank">🎙️ View Brand Voice (02-brand-voice.md)</a>
+      </div>
+    </section>
+
+    <!-- SECTION 4: HERO MECHANISM -->
+    <section id="hero-mechanism">
+      <div class="section-header">
+        <span class="section-tag">Agent 03 · Hero Mechanism Builder</span>
+        <h2 class="section-title">4. Cơ Chế Độc Quyền: Luyện Tai 4 Bước Windear</h2>
+      </div>
+      <div class="card">
+        <p>Phương pháp độc quyền không thể bị so sánh: Triệt tiêu hoàn toàn thói quen 'tắm ngôn ngữ' thụ động và thói quen dịch trong đầu bằng quy trình 4 tầng bóc tách:</p>
+        <div class="mechanism-steps">
+          <div class="m-step">
+            <div class="m-step-num">1</div>
+            <h4>Bóc Tách Âm Thanh</h4>
+            <p>Xẻ nhỏ audio 5s, đập tan bẫy nuốt âm Hollywood.</p>
+          </div>
+          <div class="m-step">
+            <div class="m-step-num">2</div>
+            <h4>Săn Từ Khóa</h4>
+            <p>Lọc 70% từ phụ, bắt trúng 30% ý nghĩa cốt lõi.</p>
+          </div>
+          <div class="m-step">
+            <div class="m-step-num">3</div>
+            <h4>Bắt Nhịp Tư Duy</h4>
+            <p>Dự đoán trước ý người nói qua từ nối chuyển ý.</p>
+          </div>
+          <div class="m-step">
+            <div class="m-step-num">4</div>
+            <h4>Shadowing 0.5s</h4>
+            <p>Nhại lại tức thì, đưa âm thanh thẳng vào phản xạ.</p>
+          </div>
+        </div>
+        <a href="03-hero-mechanism.md" class="btn btn-outline" target="_blank">⚡ View Hero Mechanism (03-hero-mechanism.md)</a>
+      </div>
+    </section>
+
+    <!-- SECTION 5: MONEY MODEL & OFFER STACK -->
+    <section id="money-model">
+      <div class="section-header">
+        <span class="section-tag">Agent 04 & 05 · Money & Offer</span>
+        <h2 class="section-title">5. Bản Đồ Doanh Thu & Grand Slam Offer</h2>
+      </div>
+      <div class="card">
+        <table class="offer-table">
+          <thead>
+            <tr>
+              <th>Cấp độ Offer</th>
+              <th>Sản phẩm / Dịch vụ</th>
+              <th>Mức giá</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Attraction (Free)</strong></td>
+              <td>Sổ Tay 100 Cụm Nuốt Âm Hollywood (PDF + Audio 5s)</td>
+              <td>0 VNĐ</td>
+            </tr>
+            <tr>
+              <td><strong>Tripwire (Hoàn vốn)</strong></td>
+              <td>Cẩm Nang Luyện Tai 4 Bước (Ebook)</td>
+              <td>2.000đ - 99.000đ</td>
+            </tr>
+            <tr>
+              <td><strong>Core Offer</strong></td>
+              <td>Khóa Học Online Video 21 Ngày Tự Luyện</td>
+              <td>599.000 VNĐ</td>
+            </tr>
+            <tr style="background: rgba(6,182,212,0.08);">
+              <td><strong>👑 High-Ticket Upsell</strong></td>
+              <td><strong>Khóa Coaching 1-1 Luyện Tai 7 Ngày (Kèm qua Zoom)</strong></td>
+              <td><span class="price-highlight">1.990.000 VNĐ</span></td>
+            </tr>
+            <tr>
+              <td><strong>Order Bump</strong></td>
+              <td>Tai Nghe Monitor Chuyên Luyện Nghe Windear Pro</td>
+              <td>350.000 VNĐ</td>
+            </tr>
+            <tr>
+              <td><strong>Continuity</strong></td>
+              <td>CLB Luyện Phản Xạ Hàng Tuần (Windear Club)</td>
+              <td>99.000đ / tháng</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+          <a href="04-money-model.md" class="btn btn-outline" target="_blank">🗺️ View Money Model (04)</a>
+          <a href="05-offer.md" class="btn btn-primary" target="_blank">💎 View Offer Detail (05)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: FUNNEL BLUEPRINT -->
+    <section id="funnel">
+      <div class="section-header">
+        <span class="section-tag">Agent 07 · Funnel Strategist</span>
+        <h2 class="section-title">6. Bản Thiết Kế Phễu & Bài Toán Kinh Tế (Unit Economics)</h2>
+      </div>
+      <div class="card">
+        <p style="margin-bottom: 16px;">Phễu <strong>Hybrid Tripwire & VSL Funnel</strong>: Bỏ 6 triệu tiền Ads ➡️ Thu 500 Leads ➡️ Bán 75 Ebook Tripwire (Hoàn 100% tiền ads) ➡️ Chốt 10 Học viên Coaching 1-1 ➡️ <strong>Tổng Doanh Thu: 27.325.000 VNĐ / Lợi Nhuận: 21.325.000 VNĐ (ROAS 4.55x)</strong>.</p>
+        
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="07-funnel-visual.html" class="btn btn-primary" target="_blank">📊 Mở Sơ Đồ Funnel Trực Quan (07-visual.html)</a>
+          <a href="07-funnel-blueprint.md" class="btn btn-outline" target="_blank">📋 View Blueprint Chi Tiết (07)</a>
+          <a href="06-hvco-leadmagnet.md" class="btn btn-outline" target="_blank">🧲 View Lead Magnet Brief (06)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 7: FULL FUNNEL ASSETS (GRID CÁC ASSETS THẬT) -->
+    <section id="assets">
+      <div class="section-header">
+        <span class="section-tag">Agent 08 - 12 · Copywriting & Sales Assets</span>
+        <h2 class="section-title">7. Toàn Bộ Tài Sản Copywriting & Công Cụ Bán Hàng</h2>
+      </div>
+      
+      <div class="assets-grid">
+        <div class="asset-card">
+          <div>
+            <h4>📢 Ad Copy Machine</h4>
+            <p>4 Góc quảng cáo Facebook/TikTok + Trọn bộ Google Search Ads chuẩn ký tự.</p>
+          </div>
+          <a href="08-ads-copy.md" class="btn btn-outline" target="_blank">View Ads (08-ads-copy.md)</a>
+        </div>
+
+        <div class="asset-card">
+          <div>
+            <h4>🌐 Landing Page Thu Lead</h4>
+            <p>Trang đích thu Email/SĐT 0đ nhận Sổ tay 100 cụm nuốt âm Hollywood.</p>
+          </div>
+          <a href="08-landing.html" class="btn btn-primary" target="_blank">View Live (08-landing.html)</a>
+        </div>
+
+        <div class="asset-card">
+          <div>
+            <h4>🎬 Kịch Bản Video VSL</h4>
+            <p>Kịch bản Video Bán Hàng 12 phút 5 phần chốt gói Coaching 1-1 1.99tr.</p>
+          </div>
+          <a href="09-vsl-script.md" class="btn btn-outline" target="_blank">View Script (09-vsl-script.md)</a>
+        </div>
+
+        <div class="asset-card">
+          <div>
+            <h4>✉️ Chuỗi 5 Email Nurturing</h4>
+            <p>Hệ thống email tự động gửi qua Resend: Giao quà ➡️ Case study ➡️ Đóng cổng.</p>
+          </div>
+          <a href="10-email-sequence.md" class="btn btn-outline" target="_blank">View Emails (10-email-sequence.md)</a>
+        </div>
+
+        <div class="asset-card">
+          <div>
+            <h4>🔄 Follow-Up Engine</h4>
+            <p>Kịch bản bám đuổi giỏ hàng bỏ quên (Zalo), 9-Word Email & Downsell 299k.</p>
+          </div>
+          <a href="11-follow-up.md" class="btn btn-outline" target="_blank">View Follow-Up (11-follow-up.md)</a>
+        </div>
+
+        <div class="asset-card">
+          <div>
+            <h4>📞 Sales Call Script</h4>
+            <p>Kịch bản cuộc gọi tư vấn 15 phút 5 bước bẻ gãy mọi lời từ chối về giá/thời gian.</p>
+          </div>
+          <a href="12-sales-script.md" class="btn btn-outline" target="_blank">View Script (12-sales-script.md)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 8: ROADMAP 90 NGÀY -->
+    <section id="roadmap">
+      <div class="section-header">
+        <span class="section-tag">Thực Thi Chiến Lược · Roadmap 90 Ngày</span>
+        <h2 class="section-title">8. Lộ Trình Triển Khai 3 Tháng (9 Milestones)</h2>
+      </div>
+      <div class="card">
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-title">Tháng 1: Validation & Launch (Mục tiêu 100 Lead + 15 Đơn Ebook + 3 Coaching)</div>
+            <div class="timeline-desc">Đưa `08-landing.html` lên web, test cổng thanh toán SePay và hoàn vốn 100% tiền ads.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">Tháng 2: Scale Traffic & Doanh Thu (Doanh thu 27.325.000 VNĐ)</div>
+            <div class="timeline-desc">Scale Ads 200k/ngày + Bán kèm Tai nghe Windear Monitor + Đạt 10 học viên Coaching 1-1.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-title">Tháng 3: Systemize & Continuity (Ra mắt Windear Club)</div>
+            <div class="timeline-desc">Khởi động gói thành viên định kỳ 99k/tháng + Đóng gói SOP bàn giao vận hành cho trợ lý.</div>
+          </div>
+        </div>
+        <div style="margin-top: 20px;">
+          <a href="13-roadmap-tu-van.md" class="btn btn-outline" target="_blank">🚀 View Full Roadmap (13-roadmap-tu-van.md)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 9: TỰ VẤN CHIẾN LƯỢC -->
+    <section id="self-reflection">
+      <div class="section-header">
+        <span class="section-tag">Thẳng Thắn & Rõ Ràng · Self-Reflection</span>
+        <h2 class="section-title">9. Tự Vấn Lỗ Hổng Năng Lực & Kế Hoạch Học Tập</h2>
+      </div>
+      <div class="card">
+        <div class="self-reflect-grid">
+          <div class="reflect-box">
+            <h4>🔴 3 Điểm Yếu Lớn Nhất</h4>
+            <p style="font-size: 13px; color: var(--text-muted);">
+              1. Kỹ năng Media Buying & chạy ads Facebook thực chiến.<br>
+              2. Kỹ năng sản xuất video ngắn TikTok/Reels đều đặn.<br>
+              3. Kỹ năng tư vấn chốt đơn 1-1 qua điện thoại.
+            </p>
+          </div>
+
+          <div class="reflect-box">
+            <h4>🤖 AI Gánh & Tự Học</h4>
+            <p style="font-size: 13px; color: var(--text-muted);">
+              - <strong>AI gánh:</strong> Viết toàn bộ copy, tạo kịch bản video, xử lý webhook SePay.<br>
+              - <strong>Tự học trong 7 ngày tới:</strong> Tự tay set camp 200k test ads, quay 3 video CapCut đầu tiên và bấm số gọi tư vấn lead thật.
+            </p>
+          </div>
+
+          <div class="reflect-box">
+            <h4>⚠️ 3 Vấn Đề Sợ Kẹt</h4>
+            <p style="font-size: 13px; color: var(--text-muted);">
+              1. Ads đắt ➡️ Đổi ngay sang Hook Góc 2/Góc 3.<br>
+              2. Không ai mua Tripwire ➡️ Tối ưu tiêu đề OTO.<br>
+              3. VSL ít đơn ➡️ Rút ngắn VSL xuống 7 phút.
+            </p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+          <a href="#hero" class="btn btn-accent" style="font-size: 16px; padding: 14px 28px;">🔥 TÔI SẴN SÀNG PITCH Ở DEMO DAY NGÀY 21</a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>© 2026 Windear English by Trần Khả Hào. Đóng gói hoàn chỉnh qua 21 Ngày Khóa Học AI Coding Mastery.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sơ Đồ Phễu Kinh Doanh 12 Agents ASSP - Windear Funnel Visual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B1120;
+      --card-bg: #1E293B;
+      --border: #334155;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      
+      --ads-color: #F59E0B;
+      --capture-color: #06B6D4;
+      --nurture-color: #10B981;
+      --sales-color: #8B5CF6;
+      --upsell-color: #EC4899;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 40px 20px; line-height: 1.6; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    
+    header { text-align: center; margin-bottom: 40px; }
+    .badge { display: inline-block; background: rgba(6,182,212,0.15); color: var(--capture-color); padding: 6px 16px; border-radius: 99px; font-weight: 700; font-size: 14px; margin-bottom: 12px; }
+    h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    p.subtitle { color: var(--text-muted); font-size: 16px; }
+
+    /* Funnel Flow */
+    .funnel-grid { display: flex; flex-direction: column; gap: 24px; position: relative; }
+    
+    .funnel-step { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: space-between; position: relative; transition: 0.2s; }
+    .funnel-step:hover { transform: translateY(-2px); border-color: var(--capture-color); }
+    
+    .step-left { display: flex; align-items: center; gap: 20px; }
+    .step-number { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #fff; flex-shrink: 0; }
+    
+    .step-info h3 { font-size: 18px; margin-bottom: 4px; }
+    .step-info p { font-size: 14px; color: var(--text-muted); }
+    
+    .step-badge { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+    
+    /* Colors per phase */
+    .phase-ads .step-number { background: var(--ads-color); }
+    .phase-ads .step-badge { background: rgba(245,158,11,0.15); color: var(--ads-color); }
+
+    .phase-capture .step-number { background: var(--capture-color); }
+    .phase-capture .step-badge { background: rgba(6,182,212,0.15); color: var(--capture-color); }
+
+    .phase-nurture .step-number { background: var(--nurture-color); }
+    .phase-nurture .step-badge { background: rgba(16,185,129,0.15); color: var(--nurture-color); }
+
+    .phase-sales .step-number { background: var(--sales-color); }
+    .phase-sales .step-badge { background: rgba(139,92,246,0.15); color: var(--sales-color); }
+
+    .phase-upsell .step-number { background: var(--upsell-color); }
+    .phase-upsell .step-badge { background: rgba(236,72,153,0.15); color: var(--upsell-color); }
+
+    /* Arrow Connector */
+    .arrow { text-align: center; color: var(--text-muted); font-size: 20px; font-weight: 800; }
+
+    /* Stats Box */
+    .stats-box { background: #0F172A; border: 1px dashed var(--border); border-radius: 16px; padding: 24px; margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: center; }
+    .stat-item h4 { font-size: 14px; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-item .val { font-size: 24px; font-weight: 800; color: var(--capture-color); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">AGENT 07 · FUNNEL STRATEGIST</span>
+      <h1>Sơ Đồ Phễu Hybrid Tripwire & VSL Windear</h1>
+      <p class="subtitle">Bản đồ điều hướng hành trình khách hàng từ người lạ thành học viên trả phí cao</p>
+    </header>
+
+    <div class="funnel-grid">
+      <!-- 1. ADS -->
+      <div class="funnel-step phase-ads">
+        <div class="step-left">
+          <div class="step-number">01</div>
+          <div class="step-info">
+            <h3>Facebook / TikTok Video Ads</h3>
+            <p>Video ngắn Hook 3s đánh vào bẫy nuốt âm của người bản xứ</p>
+          </div>
+        </div>
+        <span class="step-badge">TRAFFIC NGUỒN</span>
+      </div>
+
+      <div class="arrow">⬇️ Tỷ lệ click CTR ~ 3.5%</div>
+
+      <!-- 2. OPT-IN -->
+      <div class="funnel-step phase-capture">
+        <div class="step-left">
+          <div class="step-number">02</div>
+          <div class="step-info">
+            <h3>Trang Thu Lead (Opt-in Page 0đ)</h3>
+            <p>Tặng miễn phí Sổ Tay 100 Cụm Từ Nuốt Âm Hollywood (PDF + Audio 5s)</p>
+          </div>
+        </div>
+        <span class="step-badge">THU 500 LEADS/THÁNG</span>
+      </div>
+
+      <div class="arrow">⬇️ Chuyển đổi OTO tức thì 15%</div>
+
+      <!-- 3. TRIPWIRE -->
+      <div class="funnel-step phase-capture">
+        <div class="step-left">
+          <div class="step-number">03</div>
+          <div class="step-info">
+            <h3>Trang Cảm Ơn & One-Time Offer (99k)</h3>
+            <p>Chào bán Cẩm Nang Luyện Tai 4 Bước tự động hoàn vốn tiền Ads (Self-Liquidating)</p>
+          </div>
+        </div>
+        <span class="step-badge">HOÀN 100% TIỀN ADS</span>
+      </div>
+
+      <div class="arrow">⬇️ Chuỗi 5 Email Nurturing điều hướng</div>
+
+      <!-- 4. VSL PAGE -->
+      <div class="funnel-step phase-sales">
+        <div class="step-left">
+          <div class="step-number">04</div>
+          <div class="step-info">
+            <h3>Trang Video Bán Hàng VSL (12 Phút)</h3>
+            <p>Thuyết trình Cơ chế độc quyền 4 Bước & Giới thiệu Khóa Coaching 1-1 7 Ngày</p>
+          </div>
+        </div>
+        <span class="step-badge">CHUYỂN ĐỔI CAO</span>
+      </div>
+
+      <div class="arrow">⬇️ Ứng tuyển & Lọc form 5%</div>
+
+      <!-- 5. HIGH-TICKET -->
+      <div class="funnel-step phase-upsell">
+        <div class="step-left">
+          <div class="step-number">05</div>
+          <div class="step-info">
+            <h3>Tư Vấn & Chốt Đơn Coaching 1-1 (1.990.000đ)</h3>
+            <p>Kèm cặp Zoom 1-1 trực tiếp + Tặng Tai nghe kiểm âm Windear Pro</p>
+          </div>
+        </div>
+        <span class="step-badge">10 HỌC VIÊN/THÁNG</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-box">
+      <div class="stat-item">
+        <h4>Chi Phí Ads / Tháng</h4>
+        <div class="val" style="color: var(--ads-color);">6.000.000 ₫</div>
+      </div>
+      <div class="stat-item">
+        <h4>Doanh Thu Dự Kiến</h4>
+        <div class="val" style="color: var(--nurture-color);">27.325.000 ₫</div>
+      </div>
+      <div class="stat-item">
+        <h4>Lợi Nhuận Ròng</h4>
+        <div class="val" style="color: var(--capture-color);">21.325.000 ₫</div>
+      </div>
+      <div class="stat-item">
+        <h4>Tỷ Suất ROAS</h4>
+        <div class="val" style="color: var(--upsell-color);">4.55x</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -299,6 +299,81 @@ class WindearAppHandler(http.server.SimpleHTTPRequestHandler):
         elif path == '/thanh-toan' or path == '/thanh-toan/':
             self.path = '/thanh-toan.html'
             return super().do_GET()
+        elif path == '/ke-hoach' or path == '/ke-hoach/':
+            self.path = '/ke-hoach-kinh-doanh/index.html'
+            return super().do_GET()
+
+        # Render Markdown files (.md) hoặc tài sản trong /ke-hoach/
+        real_filepath = None
+        if path.startswith('/ke-hoach/'):
+            subfile = path[len('/ke-hoach/'):]
+            if not subfile or subfile == 'index.html':
+                self.path = '/ke-hoach-kinh-doanh/index.html'
+                return super().do_GET()
+            else:
+                real_filepath = os.path.join(DIRECTORY, 'ke-hoach-kinh-doanh', subfile)
+                if not subfile.endswith('.md'):
+                    self.path = '/ke-hoach-kinh-doanh/' + subfile
+                    return super().do_GET()
+        elif path.startswith('/ke-hoach-kinh-doanh/'):
+            subfile = path[len('/ke-hoach-kinh-doanh/'):]
+            real_filepath = os.path.join(DIRECTORY, 'ke-hoach-kinh-doanh', subfile)
+        elif path.endswith('.md'):
+            real_filepath = os.path.join(DIRECTORY, path.lstrip('/'))
+
+        if real_filepath and os.path.exists(real_filepath) and real_filepath.endswith('.md'):
+            try:
+                with open(real_filepath, 'r', encoding='utf-8') as f:
+                    md_content = f.read()
+                
+                html_rendered = f"""<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{os.path.basename(real_filepath)} — Windear ASSP Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    body {{ background: #0B1120; color: #F8FAFC; font-family: 'Plus Jakarta Sans', sans-serif; padding: 40px 20px; line-height: 1.7; }}
+    .container {{ max-width: 900px; margin: 0 auto; background: #1E293B; border: 1px solid #334155; border-radius: 20px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }}
+    .back-btn {{ display: inline-block; background: rgba(6,182,212,0.15); color: #06B6D4; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 13px; margin-bottom: 24px; border: 1px solid rgba(6,182,212,0.3); }}
+    .back-btn:hover {{ background: #06B6D4; color: #0B1120; }}
+    h1, h2, h3, h4 {{ color: #fff; margin-top: 24px; margin-bottom: 12px; }}
+    h1 {{ border-bottom: 2px solid #334155; padding-bottom: 10px; font-size: 26px; }}
+    h2 {{ border-bottom: 1px solid #334155; padding-bottom: 6px; font-size: 20px; color: #06B6D4; }}
+    table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+    th, td {{ border: 1px solid #334155; padding: 10px 14px; text-align: left; }}
+    th {{ background: #0F172A; color: #06B6D4; }}
+    blockquote {{ background: #0F172A; border-left: 4px solid #06B6D4; margin: 16px 0; padding: 12px 20px; border-radius: 0 8px 8px 0; color: #94A3B8; font-style: italic; }}
+    code {{ background: #0F172A; padding: 2px 6px; border-radius: 4px; color: #FF6B4A; font-family: monospace; font-size: 14px; }}
+    pre code {{ display: block; padding: 16px; overflow-x: auto; }}
+    ul, ol {{ padding-left: 24px; margin: 12px 0; }}
+    li {{ margin-bottom: 6px; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/ke-hoach" class="back-btn">⬅️ Quay lại Bản Thuyết Trình Tổng</a>
+    <div id="content"></div>
+  </div>
+  <script>
+    const rawMd = {json.dumps(md_content)};
+    document.getElementById('content').innerHTML = marked.parse(rawMd);
+  </script>
+</body>
+</html>"""
+                encoded = html_rendered.encode('utf-8')
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Content-Length', str(len(encoded)))
+                self.end_headers()
+                self.wfile.write(encoded)
+                return
+            except Exception as e:
+                print("Error rendering markdown:", e)
 
         # 2. APIs
         if path == '/api/products':
