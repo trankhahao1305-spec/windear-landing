@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh Toán - Cẩm Nang Luyện Tai 4 Bước</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    :root {
+      --bg: #0B1120; --card: #1E293B; --primary: #06B6D4; --accent: #FF6B4A; --text: #F8FAFC; --text-muted: #94A3B8; --border: #334155; --success: #10B981;
+    }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .checkout-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 520px; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .header { text-align: center; margin-bottom: 24px; }
+    .badge { display: inline-block; background: rgba(6,182,212,0.15); color: var(--primary); padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 700; margin-bottom: 8px; border: 1px solid rgba(6,182,212,0.3); }
+    .title { font-size: 22px; font-weight: 800; }
+    .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #E2E8F0; }
+    .form-control { width: 100%; background: #0B1120; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: #fff; font-size: 14px; box-sizing: border-box; }
+    .form-control:focus { outline: none; border-color: var(--primary); }
+
+    .btn { width: 100%; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; }
+    .btn-primary { background: var(--primary); color: #0B1120; margin-top: 8px; }
+    .btn-primary:hover { background: #0891B2; }
+
+    /* QR View */
+    .qr-container { text-align: center; display: none; }
+    .qr-image-wrapper { background: #fff; padding: 12px; border-radius: 16px; display: inline-block; margin: 16px 0; border: 4px solid var(--primary); }
+    .qr-image { width: 240px; height: 240px; display: block; }
+    .order-info { background: #0B1120; border-radius: 12px; padding: 16px; margin: 16px 0; text-align: left; font-size: 14px; border: 1px dashed var(--border); }
+    .order-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .highlight-code { color: var(--accent); font-weight: 800; font-family: monospace; font-size: 16px; }
+    .highlight-amount { color: var(--primary); font-weight: 800; font-size: 16px; }
+
+    .status-box { display: flex; align-items: center; justify-content: center; gap: 8px; color: #F59E0B; font-size: 14px; font-weight: 600; margin: 12px 0; }
+    .spinner { width: 16px; height: 16px; border: 2px solid #F59E0B; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="checkout-card">
+  <!-- STEP 1: FORM CHECKOUT -->
+  <div id="step-form">
+    <div class="header">
+      <span class="badge">WINDEAR CHECKOUT</span>
+      <h1 class="title">Thanh Toán Ebook</h1>
+      <p class="subtitle">Cẩm Nang Luyện Tai 4 Bước</p>
+    </div>
+
+    <form id="checkout-form" onsubmit="handleCheckout(event)">
+      <!-- Hidden Product Selection -->
+      <input type="hidden" id="co-product" value="2"> <!-- Product ID 2 is the Ebook in DB -->
+
+      <div class="form-group">
+        <label>Họ và tên *</label>
+        <input type="text" id="co-name" class="form-control" placeholder="Nguyễn Văn A" required>
+      </div>
+
+      <div class="form-group">
+        <label>Số điện thoại / Zalo *</label>
+        <input type="tel" id="co-phone" class="form-control" placeholder="0901234567" required>
+      </div>
+
+      <div class="form-group">
+        <label>Email nhận file PDF (Bắt buộc) *</label>
+        <input type="email" id="co-email" class="form-control" placeholder="email@gmail.com" required>
+      </div>
+
+      <div class="form-group" style="background: rgba(6,182,212,0.08); padding: 12px; border-radius: 8px; border: 1px solid rgba(6,182,212,0.2);">
+        <div style="display: flex; justify-content: space-between; font-size: 14px;">
+          <span>Tổng thanh toán:</span>
+          <strong id="display-price" style="color: var(--primary); font-size: 16px;">2.000 ₫</strong>
+        </div>
+      </div>
+
+      <button type="submit" id="btn-submit" class="btn btn-primary">
+        <span>Tiếp Tục Thanh Toán VietQR</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- STEP 2: QR CODE VIETQR -->
+  <div id="step-qr" class="qr-container">
+    <div class="header">
+      <span class="badge">QUÉT MÃ VIETQR SEPAY</span>
+      <h2 class="title">Quét Mã Để Hoàn Tất</h2>
+      <p class="subtitle">Mở App Ngân Hàng bất kỳ hoặc MoMo</p>
+    </div>
+
+    <div class="qr-image-wrapper">
+      <img id="sepay-qr-img" src="" alt="SePay VietQR" class="qr-image">
+    </div>
+
+    <div class="order-info">
+      <div class="order-row">
+        <span>Số tiền:</span>
+        <span class="highlight-amount" id="qr-amount-text">2.000 ₫</span>
+      </div>
+      <div class="order-row">
+        <span>Nội dung chuyển khoản:</span>
+        <span class="highlight-code" id="qr-code-text">WD1001</span>
+      </div>
+      <div class="order-row">
+        <span>Ngân hàng nhận:</span>
+        <strong>MBBank</strong>
+      </div>
+      <div class="order-row">
+        <span>Số tài khoản:</span>
+        <strong style="font-family: monospace;">0332255107</strong>
+      </div>
+    </div>
+
+    <div class="status-box">
+      <div class="spinner"></div>
+      <span>Đang chờ hệ thống SePay xác nhận...</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentOrderCode = '';
+  let pollInterval = null;
+
+  function formatMoney(amount) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  }
+
+  async function handleCheckout(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerText = 'Đang khởi tạo đơn hàng...';
+
+    const productId = 2; // Hardcode ID 2 cho Ebook
+    const name = document.getElementById('co-name').value.trim();
+    const phone = document.getElementById('co-phone').value.trim();
+    const email = document.getElementById('co-email').value.trim();
+
+    let randCode = 'WD' + Math.floor(1000 + Math.random() * 9000);
+    let amount = 2000;
+
+    try {
+      const res = await fetch('/api/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId, name, phone, email })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.order_code) {
+          randCode = data.order_code;
+          amount = data.amount || amount;
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    currentOrderCode = randCode;
+
+    // Chuyển sang màn hình QR VietQR SePay
+    document.getElementById('step-form').style.display = 'none';
+    document.getElementById('step-qr').style.display = 'block';
+
+    const qrUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0332255107&template=compact&amount=${amount}&des=${randCode}`;
+    document.getElementById('sepay-qr-img').src = qrUrl;
+    document.getElementById('qr-amount-text').innerText = formatMoney(amount);
+    document.getElementById('qr-code-text').innerText = randCode;
+
+    startPolling(randCode);
+  }
+
+  function startPolling(orderCode) {
+    if (pollInterval) clearInterval(pollInterval);
+    pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/check-order-status?order_code=' + encodeURIComponent(orderCode));
+        if (res.ok) {
+          const ord = await res.json();
+          if (ord && ord.status === 'success') {
+            clearInterval(pollInterval);
+            // REDIRECT TO THANK YOU PAGE
+            window.location.href = "/luyen-tai-4-buoc-cam-on.html?order=" + orderCode;
+          }
+        }
+      } catch(e) {}
+    }, 1500);
+  }
+</script>
+
+</body>
+</html>
